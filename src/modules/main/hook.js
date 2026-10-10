@@ -1,46 +1,36 @@
 import { useCallback } from 'react'
 import { useAppStore } from '@/stores/appStore'
-
-function entrarTelaCheia() {
-  if (!document.fullscreenElement) document.documentElement.requestFullscreen?.().catch(() => {})
-}
-
-function sairTelaCheia() {
-  if (document.fullscreenElement) document.exitFullscreen()
-}
-
-function falar(texto) {
-  const sintese = window.speechSynthesis
-  if (!sintese || !texto) return
-  sintese.cancel()
-  const fala = new SpeechSynthesisUtterance(texto)
-  fala.lang = 'pt-BR'
-  fala.rate = 0.8
-  const voz = sintese.getVoices().find((v) => v.lang.replace('_', '-') === 'pt-BR')
-  if (voz) fala.voice = voz
-  sintese.speak(fala)
-}
+import { enterFullscreen, exitFullscreen } from '@/utils/fullscreen'
+import { speak, stopSpeaking } from '@/utils/speech'
 
 export function useMain() {
-  const etapa = useAppStore((s) => s.etapa)
-  const carregando = useAppStore((s) => s.carregando)
-  const visao = useAppStore((s) => s.visao)
-  const resultado = useAppStore((s) => s.resultado)
-  const comecar = useAppStore((s) => s.comecar)
-  const responder = useAppStore((s) => s.responder)
-  const avancar = useAppStore((s) => s.avancar)
+  const step = useAppStore((state) => state.step)
+  const isLoading = useAppStore((state) => state.isLoading)
+  const questionView = useAppStore((state) => state.questionView)
+  const result = useAppStore((state) => state.result)
+  const startQuiz = useAppStore((state) => state.startQuiz)
+  const answerQuestion = useAppStore((state) => state.answerQuestion)
+  const goToNextQuestion = useAppStore((state) => state.goToNextQuestion)
 
-  const onComecar = useCallback(() => {
-    entrarTelaCheia()
-    comecar()
-  }, [comecar])
-  const onResponder = useCallback((resposta) => responder(resposta), [responder])
-  const onOuvir = useCallback(() => falar(visao?.fala), [visao?.fala])
-  const onAvancar = useCallback(() => {
-    window.speechSynthesis?.cancel()
-    avancar()
-  }, [avancar])
-  const onSair = useCallback(() => sairTelaCheia(), [])
+  const onStart = useCallback(() => {
+    enterFullscreen()
+    startQuiz()
+  }, [startQuiz])
+  const onListen = useCallback(() => speak(questionView?.speechText), [questionView?.speechText])
+  const onNext = useCallback(() => {
+    stopSpeaking()
+    goToNextQuestion()
+  }, [goToNextQuestion])
 
-  return { etapa, carregando, visao, resultado, onComecar, onResponder, onOuvir, onAvancar, onSair }
+  return {
+    step,
+    isLoading,
+    questionView,
+    result,
+    onStart,
+    onAnswer: answerQuestion,
+    onListen,
+    onNext,
+    onExit: exitFullscreen,
+  }
 }

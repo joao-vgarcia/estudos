@@ -1,30 +1,29 @@
 import Button from '@/components/atoms/Button'
-import Icon from '@/components/atoms/Icon'
 import Text from '@/components/atoms/Text'
 import ResultItem from '@/components/molecules/ResultItem'
 
-export default function QuizResult({ placar, secoes, onRecomecar, onSair }) {
+export default function QuizResult({ correctCount, total, sections, onRestart, onExit }) {
   return (
     <div className="flex flex-col gap-8">
-      <Text variant="subtitle">{placar}</Text>
-      {secoes.map((secao) => (
-        <section key={secao.titulo} className="flex flex-col gap-4">
-          <Text as="h3" variant="subtitle">{secao.titulo} · {secao.placar}</Text>
+      <Text variant="subtitle">Você acertou {correctCount} de {total}.</Text>
+      {sections.map((section) => (
+        <section key={section.title} className="flex flex-col gap-4">
+          <Text as="h3" variant="subtitle">
+            {section.title} · {section.correctCount} de {section.total}
+          </Text>
           <ul className="flex flex-col gap-3">
-            {secao.itens.map((item, i) => (
-              <ResultItem key={i} {...item} />
+            {section.items.map((item) => (
+              <ResultItem key={item.id} {...item} />
             ))}
           </ul>
         </section>
       ))}
       <div className="flex flex-col-reverse gap-5 sm:flex-row sm:justify-end">
-        <Button variant="negative" onClick={onSair}>
+        <Button variant="negative" endIcon="log-out" onClick={onExit}>
           Sair
-          <Icon name="log-out" size={32} />
         </Button>
-        <Button variant="primary" onClick={onRecomecar}>
+        <Button variant="primary" endIcon="rotate-ccw" onClick={onRestart}>
           Recomeçar
-          <Icon name="rotate-ccw" size={32} />
         </Button>
       </div>
     </div>

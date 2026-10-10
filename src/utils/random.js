@@ -1,0 +1,14 @@
+export function randomInt(min, max) {
+  return Math.floor(Math.random() * (max - min + 1)) + min
+}
+
+export function shuffle(list) {
+  const shuffled = [...list]
+  for (let index = shuffled.length - 1; index > 0; index--) {
+    const randomIndex = randomInt(0, index)
+    const current = shuffled[index]
+    shuffled[index] = shuffled[randomIndex]
+    shuffled[randomIndex] = current
+  }
+  return shuffled
+}

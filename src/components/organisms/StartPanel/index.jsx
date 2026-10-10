@@ -1,14 +1,12 @@
 import Button from '@/components/atoms/Button'
-import Icon from '@/components/atoms/Icon'
 import Text from '@/components/atoms/Text'
 
-export default function StartPanel({ titulo, onComecar }) {
+export default function StartPanel({ title, onStart }) {
   return (
     <div className="flex flex-col items-center gap-10 text-center">
-      <Text as="h1" variant="title">{titulo}</Text>
-      <Button variant="primary" onClick={onComecar}>
+      <Text as="h1" variant="title">{title}</Text>
+      <Button variant="primary" endIcon="play" onClick={onStart}>
         Começar
-        <Icon name="play" size={32} />
       </Button>
     </div>
   )
