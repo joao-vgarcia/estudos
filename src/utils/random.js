@@ -12,3 +12,7 @@ export function shuffle(list) {
   }
   return shuffled
 }
+
+export function randomItem(list) {
+  return list[randomInt(0, list.length - 1)]
+}

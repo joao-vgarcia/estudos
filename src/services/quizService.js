@@ -1,17 +1,11 @@
 import { QUESTION_TYPES } from '@/constants/quiz'
-import { randomInt, shuffle } from '@/utils/random'
+import { shuffle } from '@/utils/random'
 import { getVocabularyQuestions } from './englishService'
-import { getEasyQuestions, getMultiplicationTable } from './mathService'
+import { getEasyQuestions, getHardQuestions } from './mathService'
 import { getDictationQuestions, getGrammarQuestions } from './portugueseService'
 
-const MIN_TABLE_NUMBER = 2
-const MAX_TABLE_NUMBER = 9
-
 const SUBJECTS = [
-  {
-    title: 'Matemática',
-    fetchers: [() => getMultiplicationTable(randomInt(MIN_TABLE_NUMBER, MAX_TABLE_NUMBER)), getEasyQuestions],
-  },
+  { title: 'Matemática', fetchers: [getEasyQuestions, getHardQuestions] },
   { title: 'Português', fetchers: [getGrammarQuestions, getDictationQuestions] },
   { title: 'Inglês', fetchers: [getVocabularyQuestions] },
 ]
