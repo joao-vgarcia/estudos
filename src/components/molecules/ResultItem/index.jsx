@@ -1,5 +1,7 @@
+import Emoji from '@/components/atoms/Emoji'
 import Icon from '@/components/atoms/Icon'
 import Text from '@/components/atoms/Text'
+import EmojiGrid from '@/components/molecules/EmojiGrid'
 import { getSubjectBackground } from '@/constants/subjectColors'
 
 const statusStyles = {
@@ -16,7 +18,31 @@ function AnswerDetails({ givenAnswer, correctAnswer, isCorrect }) {
   )
 }
 
-export default function ResultItem({ subjectId, difficulty, prompt, givenAnswer, correctAnswer, parts, isCorrect }) {
+function PromptMedia({ image, word, imageGrid }) {
+  if (!image && !word && !imageGrid) return null
+
+  return (
+    <div className="my-2 flex flex-wrap items-center gap-4">
+      {image && <Emoji symbol={image} size="sm" />}
+      {word && <Text>“{word}”</Text>}
+      {imageGrid && <EmojiGrid {...imageGrid} size="xs" />}
+    </div>
+  )
+}
+
+export default function ResultItem({
+  subjectId,
+  difficulty,
+  prompt,
+  image,
+  word,
+  imageGrid,
+  givenAnswer,
+  correctAnswer,
+  parts,
+  explanation,
+  isCorrect,
+}) {
   const status = isCorrect ? statusStyles.correct : statusStyles.wrong
 
   return (
@@ -29,6 +55,7 @@ export default function ResultItem({ subjectId, difficulty, prompt, givenAnswer,
       </span>
       <div className="flex flex-col gap-1">
         <Text>{prompt}</Text>
+        <PromptMedia image={image} word={word} imageGrid={imageGrid} />
         {parts ? (
           parts.map((part) => (
             <div key={part.label} className="mt-3 flex flex-col gap-1">
@@ -39,6 +66,7 @@ export default function ResultItem({ subjectId, difficulty, prompt, givenAnswer,
         ) : (
           <AnswerDetails givenAnswer={givenAnswer} correctAnswer={correctAnswer} isCorrect={isCorrect} />
         )}
+        {explanation && <Text variant="muted">{explanation}</Text>}
       </div>
     </li>
   )

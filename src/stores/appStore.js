@@ -1,12 +1,15 @@
 import { create } from 'zustand'
+import { LEVELS } from '@/constants/levels'
 import { STEPS } from '@/constants/quiz'
-import { fetchQuizQuestions, fetchRetryQuestions } from '@/services/quizService'
-import { getLatestAttempts, isAnswered, isCorrectAnswer } from '@/utils/quizGrading'
+import { fetchLevelQuestions, fetchRetryQuestions } from '@/services/quizService'
+import { canAdvance, getAttemptsToRetry, getLevelAttempts, isCorrectAnswer } from '@/utils/quizGrading'
 import { buildQuestionView, buildResult } from './quizViewModels'
 
 const initialState = {
   step: STEPS.START,
   isLoading: false,
+  levelIndex: 0,
+  isRetry: false,
   questions: [],
   answers: [],
   currentIndex: 0,
@@ -19,15 +22,18 @@ export const useAppStore = create((set, get) => {
     set({ ...partialState, questionView: buildQuestionView(nextState), result: buildResult(nextState) })
   }
 
-  const startRound = async (attempts, fetchQuestions) => {
-    update({ ...initialState, step: STEPS.QUESTIONS, isLoading: true, attempts })
+  const startRound = async ({ levelIndex, attempts, isRetry }, fetchQuestions) => {
+    update({ ...initialState, step: STEPS.QUESTIONS, isLoading: true, levelIndex, isRetry, attempts })
     const fetchedQuestions = await fetchQuestions()
     const questions = fetchedQuestions.map((question, index) => {
       const id = attempts.length + index
-      return { ...question, id, slotId: question.slotId ?? id }
+      return { ...question, id, slotId: question.slotId ?? id, levelIndex }
     })
     update({ questions, answers: questions.map(({ parts }) => parts?.map(() => null) ?? null), isLoading: false })
   }
+
+  const startLevel = (levelIndex, attempts) =>
+    startRound({ levelIndex, attempts, isRetry: false }, () => fetchLevelQuestions(LEVELS[levelIndex], attempts))
 
   const finishRound = () => {
     const { questions, answers, attempts } = get()
@@ -44,15 +50,19 @@ export const useAppStore = create((set, get) => {
     questionView: null,
     result: null,
 
-    startQuiz: () => startRound([], fetchQuizQuestions),
+    startQuiz: () => startLevel(0, []),
 
-    retrySubject: (subjectId) => {
-      const { attempts } = get()
-      const missedQuestions = getLatestAttempts(attempts).filter(
-        (attempt) => attempt.subjectId === subjectId && !attempt.isCorrect,
-      )
+    continueToNextLevel: () => {
+      const { levelIndex, attempts, result } = get()
+      if (!result?.hasPassed || levelIndex === LEVELS.length - 1) return
+      return startLevel(levelIndex + 1, attempts)
+    },
+
+    retryMissed: () => {
+      const { levelIndex, attempts } = get()
+      const missedQuestions = getAttemptsToRetry(getLevelAttempts(attempts, levelIndex))
       if (missedQuestions.length === 0) return
-      return startRound(attempts, () => fetchRetryQuestions(missedQuestions, attempts))
+      return startRound({ levelIndex, attempts, isRetry: true }, () => fetchRetryQuestions(missedQuestions, attempts))
     },
 
     answerQuestion: (answer, partIndex) => {
@@ -65,7 +75,7 @@ export const useAppStore = create((set, get) => {
 
     goToNextQuestion: () => {
       const { questions, answers, currentIndex } = get()
-      if (!isAnswered(answers[currentIndex])) return
+      if (!canAdvance(answers[currentIndex])) return
       if (currentIndex === questions.length - 1) {
         finishRound()
         return

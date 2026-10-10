@@ -20,3 +20,7 @@ export function randomItem(list) {
 export function randomItems(list, count) {
   return shuffle(list).slice(0, count)
 }
+
+export function balancedBooleans(count) {
+  return shuffle(Array.from({ length: count }, (_, index) => index % 2 === 0))
+}

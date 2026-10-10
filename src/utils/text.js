@@ -1,11 +1,15 @@
 import { LOCALE } from '@/constants/locale'
 
 export function normalizeText(text) {
-  return text?.trim().toLocaleLowerCase(LOCALE)
+  return text?.trim().replace(/\s+/g, ' ').toLocaleLowerCase(LOCALE)
 }
 
 export function formatCount(count, singular, plural) {
   return `${count} ${count === 1 ? singular : plural}`
+}
+
+export function removePunctuation(text) {
+  return text?.replace(/[.,;:!?]/g, '')
 }
 
 export function removeAccents(text) {

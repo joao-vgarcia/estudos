@@ -7,7 +7,7 @@ function isSameWord(first, second) {
   return removeAccents(normalizeText(first)) === removeAccents(normalizeText(second))
 }
 
-export function getDictationQuestions({ entries, prompt, speechLocale, ignoresAccents = false }) {
+export function getDictationQuestions({ entries, prompt, speechLocale, dictationUnit = 'palavra', ignoresAccents = false }) {
   return fakeRequest(
     randomItems(entries, QUESTIONS_PER_MODULE).map(({ word, hint }, index) => ({
       id: index + 1,
@@ -17,7 +17,9 @@ export function getDictationQuestions({ entries, prompt, speechLocale, ignoresAc
       hint,
       correctAnswer: word,
       speechLocale,
+      dictationUnit,
       ignoresAccents,
+      ignoresPunctuation: true,
     })),
   )
 }

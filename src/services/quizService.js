@@ -1,27 +1,83 @@
-import { DIFFICULTIES, QUESTION_TYPES, SUBJECTS } from '@/constants/quiz'
+import { DIFFICULTIES, QUESTIONS_PER_SUBJECT, QUESTION_TYPES, SUBJECTS } from '@/constants/quiz'
 import { shuffle } from '@/utils/random'
-import { getEnglishDictationQuestions, getEnglishVocabularyQuestions } from './englishService'
-import { getMathQuestions } from './mathService'
-import { getPluralQuestions, getPortugueseDictationQuestions, getSpellingQuestions } from './portugueseService'
-import { getSpanishDictationQuestions, getSpanishVocabularyQuestions } from './spanishService'
+import {
+  getEnglishDictationQuestions,
+  getEnglishListeningQuestions,
+  getEnglishPictureChoiceQuestions,
+  getEnglishPictureQuestions,
+  getEnglishTrueFalseQuestions,
+  getEnglishVocabularyQuestions,
+} from './englishService'
+import { getMathQuestions, getMathTrueFalseQuestions, getVisualCountingQuestions } from './mathService'
+import {
+  getPictureSpellingQuestions,
+  getPluralQuestions,
+  getPortugueseDictationQuestions,
+  getPortugueseTrueFalseQuestions,
+  getSpellingQuestions,
+  getSynonymQuestions,
+} from './portugueseService'
+import {
+  getSpanishDictationQuestions,
+  getSpanishListeningQuestions,
+  getSpanishPictureChoiceQuestions,
+  getSpanishPictureQuestions,
+  getSpanishTrueFalseQuestions,
+  getSpanishVocabularyQuestions,
+} from './spanishService'
 
 const SUBJECT_MODULES = [
-  { id: SUBJECTS.MATH, title: 'Matemática', fetchers: [getMathQuestions] },
+  {
+    id: SUBJECTS.MATH,
+    title: 'Matemática',
+    fetchers: [getMathQuestions, getVisualCountingQuestions, getMathTrueFalseQuestions],
+  },
   {
     id: SUBJECTS.PORTUGUESE,
     title: 'Português',
-    fetchers: [getPluralQuestions, getSpellingQuestions, getPortugueseDictationQuestions],
+    fetchers: [
+      getPluralQuestions,
+      getSpellingQuestions,
+      getPictureSpellingQuestions,
+      getSynonymQuestions,
+      getPortugueseTrueFalseQuestions,
+      getPortugueseDictationQuestions,
+    ],
   },
-  { id: SUBJECTS.ENGLISH, title: 'Inglês', fetchers: [getEnglishVocabularyQuestions, getEnglishDictationQuestions] },
-  { id: SUBJECTS.SPANISH, title: 'Espanhol', fetchers: [getSpanishVocabularyQuestions, getSpanishDictationQuestions] },
+  {
+    id: SUBJECTS.ENGLISH,
+    title: 'Inglês',
+    fetchers: [
+      getEnglishVocabularyQuestions,
+      getEnglishPictureQuestions,
+      getEnglishPictureChoiceQuestions,
+      getEnglishTrueFalseQuestions,
+      getEnglishListeningQuestions,
+      getEnglishDictationQuestions,
+    ],
+  },
+  {
+    id: SUBJECTS.SPANISH,
+    title: 'Espanhol',
+    fetchers: [
+      getSpanishVocabularyQuestions,
+      getSpanishPictureQuestions,
+      getSpanishPictureChoiceQuestions,
+      getSpanishTrueFalseQuestions,
+      getSpanishListeningQuestions,
+      getSpanishDictationQuestions,
+    ],
+  },
 ]
 
-const DIFFICULTY_ORDER = [DIFFICULTIES.EASY, DIFFICULTIES.MEDIUM, DIFFICULTIES.HARD]
+const SUBJECT_ORDER = SUBJECT_MODULES.map(({ id }) => id)
 
-const MAX_REPLACEMENT_FETCHES = 10
+const SHUFFLED_OPTION_TYPES = [QUESTION_TYPES.MULTIPLE_CHOICE, QUESTION_TYPES.IMAGE_CHOICE]
 
-function compareDifficulty(first, second) {
-  return DIFFICULTY_ORDER.indexOf(first.difficulty) - DIFFICULTY_ORDER.indexOf(second.difficulty)
+const MAX_FETCHES = 10
+
+function compareSubject(first, second) {
+  return SUBJECT_ORDER.indexOf(first.subjectId) - SUBJECT_ORDER.indexOf(second.subjectId)
 }
 
 function prepareQuestion(question, { id, title }, fetcherIndex) {
@@ -33,7 +89,7 @@ function prepareQuestion(question, { id, title }, fetcherIndex) {
     fetcherIndex,
     difficulty: question.difficulty ?? DIFFICULTIES.EASY,
     type,
-    ...(type === QUESTION_TYPES.MULTIPLE_CHOICE && { options: shuffle(question.options) }),
+    ...(SHUFFLED_OPTION_TYPES.includes(type) && { options: shuffle(question.options) }),
   }
 }
 
@@ -42,29 +98,66 @@ async function fetchPreparedQuestions(subjectModule, fetcherIndex) {
   return questions.map((question) => prepareQuestion(question, subjectModule, fetcherIndex))
 }
 
-async function fetchSubjectQuestions(subjectModule) {
+function getQuestionKey({ subjectId, prompt, word, image, correctAnswer }) {
+  return [subjectId, prompt, word, image, correctAnswer].join('|')
+}
+
+function groupBy(list, getKey) {
+  const groups = new Map()
+  for (const item of list) {
+    const key = getKey(item)
+    groups.set(key, [...(groups.get(key) ?? []), item])
+  }
+  return [...groups.values()]
+}
+
+function pickVaried(questions, count) {
+  const groups = shuffle(groupBy(shuffle(questions), ({ fetcherIndex }) => fetcherIndex))
+  const picked = []
+  while (picked.length < count && groups.some((group) => group.length > 0)) {
+    for (const group of groups) {
+      if (group.length > 0 && picked.length < count) picked.push(group.shift())
+    }
+  }
+  return shuffle(picked)
+}
+
+async function fetchSubjectPool(subjectModule) {
   const questionLists = await Promise.all(
     subjectModule.fetchers.map((_, fetcherIndex) => fetchPreparedQuestions(subjectModule, fetcherIndex)),
   )
-  return questionLists.flat().toSorted(compareDifficulty)
+  return questionLists.flat()
 }
 
-export async function fetchQuizQuestions() {
-  const questionsBySubject = await Promise.all(SUBJECT_MODULES.map(fetchSubjectQuestions))
-  return questionsBySubject.flat()
-}
+async function collectQuestions(subjectModule, { difficulty, count }, seenKeys) {
+  const collected = []
 
-function getQuestionKey({ subjectId, prompt, correctAnswer }) {
-  return [subjectId, prompt, correctAnswer].join('|')
-}
-
-function groupByOrigin(questions) {
-  const groups = new Map()
-  for (const question of questions) {
-    const key = `${question.fetcherIndex}|${question.difficulty}`
-    groups.set(key, [...(groups.get(key) ?? []), question])
+  for (let fetchCount = 0; fetchCount < MAX_FETCHES && collected.length < count; fetchCount++) {
+    const pool = (await fetchSubjectPool(subjectModule)).filter((question) => question.difficulty === difficulty)
+    if (pool.length === 0) break
+    const freshQuestions = new Map(
+      pool.filter((question) => !seenKeys.has(getQuestionKey(question))).map((question) => [getQuestionKey(question), question]),
+    )
+    const chosen = pickVaried([...freshQuestions.values()], count - collected.length)
+    chosen.forEach((question) => seenKeys.add(getQuestionKey(question)))
+    collected.push(...chosen)
   }
-  return [...groups.values()]
+
+  return collected
+}
+
+async function fetchLevelSubjectQuestions(subjectModule, { difficulty, fallback }, seenKeys) {
+  const questions = await collectQuestions(subjectModule, { difficulty, count: QUESTIONS_PER_SUBJECT }, seenKeys)
+  if (questions.length > 0 || !fallback) return questions
+  return collectQuestions(subjectModule, fallback, seenKeys)
+}
+
+export async function fetchLevelQuestions(level, answeredQuestions) {
+  const seenKeys = new Set(answeredQuestions.map(getQuestionKey))
+  const questionsBySubject = await Promise.all(
+    SUBJECT_MODULES.map((subjectModule) => fetchLevelSubjectQuestions(subjectModule, level, seenKeys)),
+  )
+  return questionsBySubject.flat()
 }
 
 async function fetchReplacements(missedQuestions, seenKeys) {
@@ -72,7 +165,7 @@ async function fetchReplacements(missedQuestions, seenKeys) {
   const subjectModule = SUBJECT_MODULES.find(({ id }) => id === subjectId)
   const replacements = []
 
-  for (let fetchCount = 0; fetchCount < MAX_REPLACEMENT_FETCHES; fetchCount++) {
+  for (let fetchCount = 0; fetchCount < MAX_FETCHES; fetchCount++) {
     const candidates = await fetchPreparedQuestions(subjectModule, fetcherIndex)
     for (const candidate of candidates) {
       const key = getQuestionKey(candidate)
@@ -88,8 +181,10 @@ async function fetchReplacements(missedQuestions, seenKeys) {
 
 export async function fetchRetryQuestions(missedQuestions, answeredQuestions) {
   const seenKeys = new Set(answeredQuestions.map(getQuestionKey))
-  const replacementLists = await Promise.all(
-    groupByOrigin(missedQuestions).map((group) => fetchReplacements(group, seenKeys)),
+  const groups = groupBy(
+    missedQuestions,
+    ({ subjectId, fetcherIndex, difficulty }) => `${subjectId}|${fetcherIndex}|${difficulty}`,
   )
-  return replacementLists.flat().toSorted(compareDifficulty)
+  const replacementLists = await Promise.all(groups.map((group) => fetchReplacements(group, seenKeys)))
+  return replacementLists.flat().toSorted(compareSubject)
 }

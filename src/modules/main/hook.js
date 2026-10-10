@@ -9,21 +9,19 @@ export function useMain() {
   const questionView = useAppStore((state) => state.questionView)
   const result = useAppStore((state) => state.result)
   const startQuiz = useAppStore((state) => state.startQuiz)
+  const continueToNextLevel = useAppStore((state) => state.continueToNextLevel)
+  const retryMissed = useAppStore((state) => state.retryMissed)
   const answerQuestion = useAppStore((state) => state.answerQuestion)
   const goToNextQuestion = useAppStore((state) => state.goToNextQuestion)
-  const retrySubject = useAppStore((state) => state.retrySubject)
 
-  const onStart = useCallback(() => {
+  const runInFullscreen = useCallback((action) => {
     enterFullscreen()
-    startQuiz()
-  }, [startQuiz])
-  const onRetry = useCallback(
-    (subjectId) => {
-      enterFullscreen()
-      retrySubject(subjectId)
-    },
-    [retrySubject],
-  )
+    window.scrollTo(0, 0)
+    action()
+  }, [])
+  const onStart = useCallback(() => runInFullscreen(startQuiz), [runInFullscreen, startQuiz])
+  const onContinue = useCallback(() => runInFullscreen(continueToNextLevel), [runInFullscreen, continueToNextLevel])
+  const onRetry = useCallback(() => runInFullscreen(retryMissed), [runInFullscreen, retryMissed])
   const onListen = useCallback(
     () => speak(questionView?.speechText, questionView?.speechLocale),
     [questionView?.speechText, questionView?.speechLocale],
@@ -39,6 +37,7 @@ export function useMain() {
     questionView,
     result,
     onStart,
+    onContinue,
     onRetry,
     onAnswer: answerQuestion,
     onListen,

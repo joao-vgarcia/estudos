@@ -549,3 +549,136 @@ export const DIVISION_MULTI_STEP_STATEMENTS = [
     questions: ['Quantas árvores há no pomar?', 'Quantas árvores há em cada fileira?'],
   },
 ]
+
+export const TRUE_FALSE_STATEMENTS = [
+  {
+    ranges: [[3, 10], [2, 5]],
+    solve: (sister, difference) => sister + difference,
+    mistake: (sister, difference) => sister - difference,
+    statement: (sister, difference, claimed) =>
+      `Minha irmã tem ${sister} anos. Eu sou ${difference} anos mais velho que ela. Então eu tenho ${claimed} anos.`,
+  },
+  {
+    ranges: [[8, 14], [2, 5]],
+    solve: (cousin, difference) => cousin - difference,
+    mistake: (cousin, difference) => cousin + difference,
+    statement: (cousin, difference, claimed) =>
+      `Meu primo tem ${cousin} anos. Meu irmão é ${difference} anos mais novo que ele. Então meu irmão tem ${claimed} anos.`,
+  },
+  {
+    ranges: [[5, 12], [2, 9]],
+    solve: (age, years) => age + years,
+    statement: (age, years, claimed) =>
+      `Hoje Lucas tem ${age} anos. Daqui a ${years} anos, ele terá ${claimed} anos.`,
+  },
+  {
+    ranges: [[8, 12], [2, 6]],
+    solve: (age, years) => age - years,
+    mistake: (age, years) => age + years,
+    statement: (age, years, claimed) => `Hoje Lia tem ${age} anos. Há ${years} anos, ela tinha ${claimed} anos.`,
+  },
+  {
+    ranges: [[3, 18]],
+    solve: (price) => 20 - price,
+    statement: (price, claimed) =>
+      `Comprei um lanche de ${price} reais e paguei com uma nota de 20 reais. Então recebi ${claimed} reais de troco.`,
+  },
+  {
+    ranges: [[3, 12]],
+    solve: (hens) => hens * 2,
+    mistake: (hens) => hens * 4,
+    statement: (hens, claimed) => `No quintal há ${hens} galinhas. Então há ${claimed} patas de galinha no quintal.`,
+  },
+  {
+    ranges: [[2, 9]],
+    solve: (dogs) => dogs * 4,
+    mistake: (dogs) => dogs * 2,
+    statement: (dogs, claimed) => `No parque há ${dogs} cachorros. Então há ${claimed} patas de cachorro no parque.`,
+  },
+  {
+    ranges: [[2, 6]],
+    solve: (weeks) => weeks * 7,
+    statement: (weeks, claimed) => `Uma semana tem 7 dias. Então ${weeks} semanas têm ${claimed} dias.`,
+  },
+  {
+    ranges: [[2, 5]],
+    solve: (dozens) => dozens * 12,
+    mistake: (dozens) => dozens * 10,
+    statement: (dozens, claimed) => `Uma dúzia tem 12 ovos. Então ${dozens} dúzias têm ${claimed} ovos.`,
+  },
+  {
+    ranges: [[13, 17], [2, 3]],
+    solve: (start, duration) => start + duration,
+    statement: (start, duration, claimed) =>
+      `O filme começou às ${start} horas e durou ${duration} horas. Então terminou às ${claimed} horas.`,
+  },
+  {
+    ranges: [[4, 30]],
+    solve: (stickers) => stickers * 2,
+    mistake: (stickers) => stickers + 2,
+    statement: (stickers, claimed) =>
+      `Tenho ${stickers} figurinhas e minha prima tem o dobro. Então ela tem ${claimed} figurinhas.`,
+  },
+  {
+    ranges: [[4, 40]],
+    solve: (candies) => candies / 2,
+    statement: (candies, claimed) =>
+      `Eu tinha ${candies} balas e dei metade para o meu irmão. Então dei ${claimed} balas para ele.`,
+  },
+  {
+    ranges: [[2, 8], [2, 6]],
+    solve: (price, amount) => price * amount,
+    mistake: (price, amount) => price + amount,
+    statement: (price, amount, claimed) =>
+      `Cada pastel custa ${price} reais. Então ${amount} pastéis custam ${claimed} reais.`,
+  },
+  {
+    ranges: [[2, 6], [2, 5]],
+    solve: (bicycles, tricycles) => bicycles * 2 + tricycles * 3,
+    mistake: (bicycles, tricycles) => (bicycles + tricycles) * 2,
+    statement: (bicycles, tricycles, claimed) =>
+      `Na pracinha há ${bicycles} bicicletas e ${tricycles} triciclos. Então há ${claimed} rodas ao todo.`,
+  },
+  {
+    ranges: [[8, 20], [2, 7]],
+    solve: (up, down) => up - down,
+    mistake: (up, down) => up + down,
+    statement: (up, down, claimed) =>
+      `Subi ${up} degraus da escada e depois desci ${down}. Então estou no degrau ${claimed}.`,
+  },
+  {
+    ranges: [[2, 9], [2, 9]],
+    solve: (ahead, behind) => ahead + behind + 1,
+    mistake: (ahead, behind) => ahead + behind,
+    statement: (ahead, behind, claimed) =>
+      `Na fila do lanche, há ${ahead} crianças na minha frente e ${behind} atrás de mim. Então a fila tem ${claimed} crianças.`,
+  },
+  {
+    ranges: [[2, 6]],
+    solve: (children) => children * 10,
+    mistake: (children) => children * 5,
+    statement: (children, claimed) =>
+      `Cada mão tem 5 dedos. Então ${children} crianças têm ${claimed} dedos nas mãos.`,
+  },
+  {
+    ranges: [[2, 6]],
+    solve: (teams) => teams * 5,
+    statement: (teams, claimed) =>
+      `Um time de futsal tem 5 jogadores em quadra. Então ${teams} times têm ${claimed} jogadores em quadra.`,
+  },
+]
+
+export const COUNTING_ITEMS = [
+  { symbol: '🍪', question: 'Quantos biscoitos há na bandeja?' },
+  { symbol: '🍎', question: 'Quantas maçãs há na caixa?' },
+  { symbol: '🍓', question: 'Quantos morangos há na cesta?' },
+  { symbol: '⭐', question: 'Quantas estrelas há no céu?' },
+  { symbol: '🎈', question: 'Quantos balões há na festa?' },
+  { symbol: '🐟', question: 'Quantos peixes há no aquário?' },
+  { symbol: '🌻', question: 'Quantos girassóis há no jardim?' },
+  { symbol: '🚗', question: 'Quantos carros há no estacionamento?' },
+  { symbol: '⚽', question: 'Quantas bolas há no armário?' },
+  { symbol: '🧁', question: 'Quantos bolinhos há na vitrine?' },
+  { symbol: '🐥', question: 'Quantos pintinhos há no galinheiro?' },
+  { symbol: '🍩', question: 'Quantas rosquinhas há na caixa?' },
+]

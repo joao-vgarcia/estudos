@@ -1,8 +1,16 @@
 @import "tailwindcss";
 
 @theme {
-  --font-sans: "Fredoka", ui-rounded, system-ui, sans-serif;
+  --font-sans: "Fredoka", ui-rounded, system-ui, sans-serif, "Noto Color Emoji";
   --font-display: "Bubblegum Sans", "Fredoka", ui-rounded, system-ui, sans-serif;
+  --font-emoji: "Noto Color Emoji", "Apple Color Emoji", "Segoe UI Emoji", sans-serif;
+
+  --animate-pop: pop 0.4s ease-out;
+  --animate-confetti: confetti-fall 4s linear both;
+  --animate-float: float 2.4s ease-in-out infinite;
+  --animate-glow: glow 1.6s ease-out infinite;
+  --animate-shine: shine 3s linear infinite;
+  --animate-wiggle: wiggle 1.2s ease-in-out infinite;
 
   --color-background: #a4ae60;
   --color-positive: #2b6fd8;
@@ -22,6 +30,67 @@
   --color-spanish-easy: #df58ac;
   --color-spanish-medium: #bc378d;
   --color-spanish-hard: #9a0a70;
+
+  @keyframes pop {
+    0% {
+      opacity: 0;
+      transform: scale(0.6);
+    }
+    70% {
+      opacity: 1;
+      transform: scale(1.08);
+    }
+    100% {
+      transform: scale(1);
+    }
+  }
+
+  @keyframes confetti-fall {
+    0% {
+      transform: translate3d(0, -10vh, 0) rotate(0deg);
+    }
+    100% {
+      transform: translate3d(var(--confetti-drift, 0), 110vh, 0) rotate(720deg);
+    }
+  }
+
+  @keyframes float {
+    0%,
+    100% {
+      transform: translateY(0) rotate(-4deg);
+    }
+    50% {
+      transform: translateY(-14px) rotate(4deg);
+    }
+  }
+
+  @keyframes glow {
+    0% {
+      box-shadow: 0 0 0 0 rgb(255 255 255 / 0.8);
+    }
+    100% {
+      box-shadow: 0 0 0 24px rgb(255 255 255 / 0);
+    }
+  }
+
+  @keyframes shine {
+    0% {
+      background-position: 0% 50%;
+    }
+    100% {
+      background-position: 200% 50%;
+    }
+  }
+
+  @keyframes wiggle {
+    0%,
+    100% {
+      transform: rotate(-10deg) scale(1);
+    }
+    50% {
+      transform: rotate(10deg) scale(1.1);
+    }
+  }
 }
 
 body {
