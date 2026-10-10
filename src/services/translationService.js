@@ -36,7 +36,7 @@ export function getPictureTranslationQuestions({ language, translations, wrongTr
   return fakeRequest(
     randomItems(PICTURE_WORDS, QUESTIONS_PER_MODULE).map((word, index) => ({
       id: index + 1,
-      prompt: `Como se diz isto em ${language}?`,
+      prompt: `Como se escreve o nome desta figura em ${language}?`,
       image: EMOJIS[word],
       options: [translations[word], ...wrongTranslations[word]],
       correctAnswer: translations[word],

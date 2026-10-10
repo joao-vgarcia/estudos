@@ -1,19 +1,50 @@
 import Button from '@/components/atoms/Button'
 import Text from '@/components/atoms/Text'
+import Accordion from '@/components/molecules/Accordion'
 import ResultItem from '@/components/molecules/ResultItem'
 import Celebration from '@/components/organisms/Celebration'
 import { formatCount } from '@/utils/text'
 
-function PassedActions({ nextLevelTitle, onContinue, onRestart, onExit }) {
+function formatBonusCount(count) {
+  return formatCount(count, 'pergunta bônus', 'perguntas bônus')
+}
+
+function BonusMessage({ bonusOffer, bonusResult }) {
+  if (bonusOffer) {
+    return (
+      <Text variant="muted">
+        Quer ganhar mais tempo? Responda {formatBonusCount(bonusOffer.questionCount)}: cada acerto vale{' '}
+        {`+${bonusOffer.reward}`}. Só dá para tentar uma vez!
+      </Text>
+    )
+  }
+  if (bonusResult?.reward) {
+    return (
+      <Text variant="muted">
+        Você acertou {bonusResult.correctCount} de {formatBonusCount(bonusResult.total)} e ganhou +{bonusResult.reward}!
+      </Text>
+    )
+  }
+  if (bonusResult) return <Text variant="muted">Não foi dessa vez: você não acertou o bônus.</Text>
+  return null
+}
+
+function PassedActions({ nextLevelTitle, bonusOffer, bonusResult, onContinue, onBonus, onRestart, onExit }) {
   return (
     <div className="flex flex-col gap-5">
+      <BonusMessage bonusOffer={bonusOffer} bonusResult={bonusResult} />
       {nextLevelTitle && (
         <Text variant="muted">Quer continuar o desafio? O próximo é o nível {nextLevelTitle}.</Text>
       )}
-      <div className="flex flex-col-reverse gap-5 sm:flex-row sm:justify-end">
+      <div className="flex flex-col-reverse gap-5 sm:flex-row sm:flex-wrap sm:justify-end">
         <Button variant="negative" endIcon="log-out" onClick={onExit}>
           Sair
         </Button>
+        {bonusOffer && (
+          <Button variant="secondary" endIcon="gift" onClick={onBonus}>
+            {bonusOffer.questionCount === 1 ? 'Pergunta bônus' : 'Perguntas bônus'}
+          </Button>
+        )}
         {nextLevelTitle ? (
           <Button variant="primary" endIcon="arrow-right" onClick={onContinue}>
             Continuar desafio
@@ -46,6 +77,24 @@ function RetryActions({ levelTitle, correctCount, total, retryCount, onRetry }) 
   )
 }
 
+function ResultSection({ title, correctCount, total, items }) {
+  return (
+    <Accordion
+      title={
+        <Text as="h3" variant="subtitle">
+          {title} · {correctCount} de {total}
+        </Text>
+      }
+    >
+      <ul className="flex flex-col gap-3">
+        {items.map((item) => (
+          <ResultItem key={item.id} {...item} />
+        ))}
+      </ul>
+    </Accordion>
+  )
+}
+
 export default function QuizResult({
   levelTitle,
   correctCount,
@@ -54,10 +103,13 @@ export default function QuizResult({
   hasPassed,
   reward,
   celebration,
+  bonusOffer,
+  bonusResult,
   nextLevelTitle,
   retryCount,
   onContinue,
   onRetry,
+  onBonus,
   onRestart,
   onExit,
 }) {
@@ -66,7 +118,15 @@ export default function QuizResult({
       {hasPassed ? (
         <>
           <Celebration {...celebration} reward={reward} correctCount={correctCount} total={total} />
-          <PassedActions nextLevelTitle={nextLevelTitle} onContinue={onContinue} onRestart={onRestart} onExit={onExit} />
+          <PassedActions
+            nextLevelTitle={nextLevelTitle}
+            bonusOffer={bonusOffer}
+            bonusResult={bonusResult}
+            onContinue={onContinue}
+            onBonus={onBonus}
+            onRestart={onRestart}
+            onExit={onExit}
+          />
         </>
       ) : (
         <RetryActions
@@ -77,18 +137,12 @@ export default function QuizResult({
           onRetry={onRetry}
         />
       )}
-      {sections.map((section) => (
-        <section key={section.subjectId} className="flex flex-col gap-4">
-          <Text as="h3" variant="subtitle">
-            {section.title} · {section.correctCount} de {section.total}
-          </Text>
-          <ul className="flex flex-col gap-3">
-            {section.items.map((item) => (
-              <ResultItem key={item.id} {...item} />
-            ))}
-          </ul>
-        </section>
-      ))}
+      <div className="flex flex-col gap-4">
+        {sections.map((section) => (
+          <ResultSection key={section.subjectId} {...section} />
+        ))}
+        {bonusResult && <ResultSection title="Bônus" {...bonusResult} />}
+      </div>
     </div>
   )
 }

@@ -11,6 +11,7 @@ export function useMain() {
   const startQuiz = useAppStore((state) => state.startQuiz)
   const continueToNextLevel = useAppStore((state) => state.continueToNextLevel)
   const retryMissed = useAppStore((state) => state.retryMissed)
+  const playBonus = useAppStore((state) => state.playBonus)
   const answerQuestion = useAppStore((state) => state.answerQuestion)
   const goToNextQuestion = useAppStore((state) => state.goToNextQuestion)
 
@@ -22,6 +23,7 @@ export function useMain() {
   const onStart = useCallback(() => runInFullscreen(startQuiz), [runInFullscreen, startQuiz])
   const onContinue = useCallback(() => runInFullscreen(continueToNextLevel), [runInFullscreen, continueToNextLevel])
   const onRetry = useCallback(() => runInFullscreen(retryMissed), [runInFullscreen, retryMissed])
+  const onBonus = useCallback(() => runInFullscreen(playBonus), [runInFullscreen, playBonus])
   const onListen = useCallback(
     () => speak(questionView?.speechText, questionView?.speechLocale),
     [questionView?.speechText, questionView?.speechLocale],
@@ -39,6 +41,7 @@ export function useMain() {
     onStart,
     onContinue,
     onRetry,
+    onBonus,
     onAnswer: answerQuestion,
     onListen,
     onNext,

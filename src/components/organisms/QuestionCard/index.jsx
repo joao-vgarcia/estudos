@@ -32,7 +32,7 @@ export default function QuestionCard({
   dictationUnit,
   canListen,
   levelTitle,
-  isRetry,
+  roundLabel,
   position,
   total,
   canAdvance,
@@ -52,7 +52,7 @@ export default function QuestionCard({
     <form className="flex flex-col gap-8" onSubmit={handleSubmit}>
       <Text variant="muted">
         Nível {levelTitle}
-        {isRetry && ' · Revisão'} · Questão {position} de {total}
+        {roundLabel && ` · ${roundLabel}`} · Questão {position} de {total}
       </Text>
       <div className="flex flex-col gap-2">
         <Text as="h3" variant="subtitle">{prompt}</Text>

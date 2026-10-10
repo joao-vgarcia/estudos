@@ -4,6 +4,12 @@ export const STEPS = {
   RESULT: 'result',
 }
 
+export const ROUNDS = {
+  LEVEL: 'level',
+  RETRY: 'retry',
+  BONUS: 'bonus',
+}
+
 export const QUESTION_TYPES = {
   MULTIPLE_CHOICE: 'multiple-choice',
   NUMBER: 'number',
@@ -24,6 +30,20 @@ export const SUBJECTS = {
   SPANISH: 'spanish',
 }
 
+export const QUESTION_KINDS = {
+  OPERATIONS: 'operations',
+  COUNTING: 'counting',
+  TRUE_FALSE: 'true-false',
+  PLURAL: 'plural',
+  SPELLING: 'spelling',
+  PICTURE_NAME: 'picture-name',
+  SYNONYM: 'synonym',
+  DICTATION: 'dictation',
+  VOCABULARY: 'vocabulary',
+  PICTURE_CHOICE: 'picture-choice',
+  LISTENING: 'listening',
+}
+
 export const DIFFICULTIES = {
   EASY: 'easy',
   MEDIUM: 'medium',
@@ -31,7 +51,5 @@ export const DIFFICULTIES = {
 }
 
 export const QUESTIONS_PER_MODULE = 5
-
-export const QUESTIONS_PER_SUBJECT = 5
 
 export const PASSING_RATE = 0.9

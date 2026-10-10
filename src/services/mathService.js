@@ -39,7 +39,7 @@ const OPERATIONS = {
     statements: ADDITION_STATEMENTS,
     multiStepStatements: ADDITION_MULTI_STEP_STATEMENTS,
     variants: [
-      { type: QUESTION_TYPES.MULTIPLE_CHOICE, difficulty: DIFFICULTIES.EASY, resultRange: [30, 60] },
+      { type: QUESTION_TYPES.MULTIPLE_CHOICE, difficulty: DIFFICULTIES.EASY, resultRange: [10, 60] },
       { type: QUESTION_TYPES.NUMBER, difficulty: DIFFICULTIES.MEDIUM, resultRange: [2, 50] },
     ],
   },
@@ -51,7 +51,7 @@ const OPERATIONS = {
     statements: SUBTRACTION_STATEMENTS,
     multiStepStatements: SUBTRACTION_MULTI_STEP_STATEMENTS,
     variants: [
-      { type: QUESTION_TYPES.MULTIPLE_CHOICE, difficulty: DIFFICULTIES.EASY, resultRange: [30, 60] },
+      { type: QUESTION_TYPES.MULTIPLE_CHOICE, difficulty: DIFFICULTIES.EASY, resultRange: [10, 60] },
       { type: QUESTION_TYPES.NUMBER, difficulty: DIFFICULTIES.MEDIUM, resultRange: [2, 50] },
     ],
   },
@@ -79,6 +79,10 @@ const OPERATIONS = {
       { type: QUESTION_TYPES.NUMBER, difficulty: DIFFICULTIES.MEDIUM, resultRange: [2, 30] },
     ],
   },
+}
+
+function limitRange([min, max], maxResult = max) {
+  return [min, Math.min(max, maxResult)]
 }
 
 function generateOperands({ leftRange, rightRange, calculate }) {
@@ -115,14 +119,15 @@ function generateOptions(result) {
   return [...options].map(String)
 }
 
-function generateMultiStepQuestion(statements) {
+function generateMultiStepQuestion(statements, maxResult) {
   const { ranges, solve, statement, questions } = randomItem(statements)
+  const resultRange = limitRange(MULTI_STEP_RESULT_RANGE, maxResult)
   let operands
   let results
   do {
     operands = ranges.map((range) => randomInt(...range))
     results = solve(...operands)
-  } while (!results.every((result) => isValidMathQuestion({ result }, MULTI_STEP_RESULT_RANGE)))
+  } while (!results.every((result) => isValidMathQuestion({ result }, resultRange)))
   return {
     type: QUESTION_TYPES.NUMBER,
     difficulty: DIFFICULTIES.HARD,
@@ -131,13 +136,13 @@ function generateMultiStepQuestion(statements) {
   }
 }
 
-function generateOperationQuestions(operation) {
+function generateOperationQuestions(operation, maxResult) {
   const config = OPERATIONS[operation]
   const variants = config.variants.flatMap((variant) => new Array(QUESTIONS_PER_VARIANT).fill(variant))
   const statements = randomItems(config.statements, variants.length)
   const usedKeys = new Set()
   const questions = variants.map(({ type, difficulty, resultRange }, index) => {
-    const { left, right, result } = generateUniqueOperands(config, resultRange, usedKeys)
+    const { left, right, result } = generateUniqueOperands(config, limitRange(resultRange, maxResult), usedKeys)
     return {
       type,
       difficulty,
@@ -146,49 +151,53 @@ function generateOperationQuestions(operation) {
       correctAnswer: String(result),
     }
   })
-  return [...questions, generateMultiStepQuestion(config.multiStepStatements)]
+  return [...questions, generateMultiStepQuestion(config.multiStepStatements, maxResult)]
 }
 
-export function getMathQuestions() {
-  const questions = Object.values(MATH_OPERATIONS).flatMap(generateOperationQuestions)
+export function getMathQuestions({ maxResult } = {}) {
+  const questions = Object.values(MATH_OPERATIONS).flatMap((operation) => generateOperationQuestions(operation, maxResult))
   return fakeRequest(shuffle(questions).map((question, index) => ({ id: index + 1, ...question })))
 }
 
-function isValidClaim(claimed, result) {
-  return claimed !== result && isValidMathQuestion({ result: claimed }, TRUE_FALSE_RESULT_RANGE)
+function isValidClaim(claimed, result, resultRange) {
+  return claimed !== result && isValidMathQuestion({ result: claimed }, resultRange)
 }
 
-function generateWrongClaim(result, mistakeResult) {
-  if (randomInt(0, 1) === 1 && isValidClaim(mistakeResult, result)) return mistakeResult
+function generateWrongClaim(result, mistakeResult, resultRange) {
+  if (randomInt(0, 1) === 1 && isValidClaim(mistakeResult, result, resultRange)) return mistakeResult
   let claimed
   do {
     claimed = result + randomInt(-MAX_CLAIM_OFFSET, MAX_CLAIM_OFFSET)
-  } while (!isValidClaim(claimed, result))
+  } while (!isValidClaim(claimed, result, resultRange))
   return claimed
 }
 
-function generateTrueFalseStatement({ ranges, solve, mistake, statement }, isTrue) {
+function generateTrueFalseStatement({ ranges, solve, mistake, statement }, isTrue, resultRange) {
   let operands
   let result
   do {
     operands = ranges.map((range) => randomInt(...range))
     result = solve(...operands)
-  } while (!isValidMathQuestion({ result }, TRUE_FALSE_RESULT_RANGE))
-  const claimed = isTrue ? result : generateWrongClaim(result, mistake?.(...operands))
+  } while (!isValidMathQuestion({ result }, resultRange))
+  const claimed = isTrue ? result : generateWrongClaim(result, mistake?.(...operands), resultRange)
   return { prompt: statement(...operands, claimed), explanation: `O número certo é ${result}.` }
 }
 
-export function getMathTrueFalseQuestions() {
+export function getMathTrueFalseQuestions({ maxResult } = {}) {
+  const resultRange = limitRange(TRUE_FALSE_RESULT_RANGE, maxResult)
   return getTrueFalseQuestions({
     items: randomItems(TRUE_FALSE_STATEMENTS, QUESTIONS_PER_MODULE),
-    buildStatement: generateTrueFalseStatement,
-    difficulty: DIFFICULTIES.MEDIUM,
+    buildStatement: (item, isTrue) => generateTrueFalseStatement(item, isTrue, resultRange),
   })
 }
 
-function generateCountingQuestion({ symbol, question }, { type, difficulty, rowsRange, columnsRange }) {
-  const rows = randomInt(...rowsRange)
-  const columns = randomInt(...columnsRange)
+function generateCountingQuestion({ symbol, question }, { type, difficulty, rowsRange, columnsRange }, maxResult) {
+  let rows
+  let columns
+  do {
+    rows = randomInt(...rowsRange)
+    columns = randomInt(...columnsRange)
+  } while (rows * columns > maxResult)
   const result = rows * columns
   return {
     type,
@@ -201,10 +210,10 @@ function generateCountingQuestion({ symbol, question }, { type, difficulty, rows
   }
 }
 
-export function getVisualCountingQuestions() {
+export function getVisualCountingQuestions({ maxResult = Infinity } = {}) {
   const variants = COUNTING_VARIANTS.flatMap((variant) => new Array(QUESTIONS_PER_VARIANT).fill(variant))
   const items = randomItems(COUNTING_ITEMS, variants.length)
   return fakeRequest(
-    variants.map((variant, index) => ({ id: index + 1, ...generateCountingQuestion(items[index], variant) })),
+    variants.map((variant, index) => ({ id: index + 1, ...generateCountingQuestion(items[index], variant, maxResult) })),
   )
 }

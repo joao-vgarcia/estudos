@@ -7,7 +7,7 @@ import { WRONG_PLURALS } from '@/constants/dictionary/wrongPlurals'
 import { WRONG_SPELLINGS } from '@/constants/dictionary/wrongSpellings'
 import { WRONG_SYNONYMS } from '@/constants/dictionary/wrongSynonyms'
 import { LOCALE } from '@/constants/locale'
-import { DIFFICULTIES, QUESTIONS_PER_MODULE } from '@/constants/quiz'
+import { QUESTIONS_PER_MODULE } from '@/constants/quiz'
 import { randomItem, randomItems } from '@/utils/random'
 import { getDictationQuestions } from './dictationService'
 import { fakeRequest } from './fakeRequest'
@@ -84,7 +84,6 @@ export function getPortugueseTrueFalseQuestions() {
   return getTrueFalseQuestions({
     items: Array.from({ length: QUESTIONS_PER_MODULE }, () => randomItem(TRUE_FALSE_STATEMENTS)),
     buildStatement: (buildPrompt, isTrue) => ({ prompt: buildPrompt(isTrue) }),
-    difficulty: DIFFICULTIES.MEDIUM,
   })
 }
 

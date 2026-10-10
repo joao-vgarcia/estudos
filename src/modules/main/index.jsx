@@ -8,8 +8,20 @@ import { STEPS } from '@/constants/quiz'
 import { useMain } from './hook'
 
 export default function MainModule() {
-  const { step, isLoading, questionView, result, onStart, onContinue, onRetry, onAnswer, onListen, onNext, onExit } =
-    useMain()
+  const {
+    step,
+    isLoading,
+    questionView,
+    result,
+    onStart,
+    onContinue,
+    onRetry,
+    onBonus,
+    onAnswer,
+    onListen,
+    onNext,
+    onExit,
+  } = useMain()
 
   return (
     <PageLayout>
@@ -31,7 +43,14 @@ export default function MainModule() {
       {step === STEPS.RESULT && (
         <Container>
           <Text as="h2" variant="title">Nível {result.levelTitle}</Text>
-          <QuizResult {...result} onContinue={onContinue} onRetry={onRetry} onRestart={onStart} onExit={onExit} />
+          <QuizResult
+            {...result}
+            onContinue={onContinue}
+            onRetry={onRetry}
+            onBonus={onBonus}
+            onRestart={onStart}
+            onExit={onExit}
+          />
         </Container>
       )}
     </PageLayout>

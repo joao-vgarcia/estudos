@@ -37,7 +37,11 @@ export function getLatestAttempts(attempts) {
 }
 
 export function getLevelAttempts(attempts, levelIndex) {
-  return getLatestAttempts(attempts).filter((attempt) => attempt.levelIndex === levelIndex)
+  return getLatestAttempts(attempts).filter((attempt) => attempt.levelIndex === levelIndex && !attempt.isBonus)
+}
+
+export function getBonusAttempts(attempts, levelIndex) {
+  return attempts.filter((attempt) => attempt.levelIndex === levelIndex && attempt.isBonus)
 }
 
 export function hasReachedPassingRate(attempts) {
