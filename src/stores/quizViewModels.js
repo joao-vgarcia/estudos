@@ -1,14 +1,5 @@
-import { QUESTION_TYPES, STEPS } from '@/constants/quiz'
-import { normalizeText, removeAccents } from '@/utils/text'
-
-function normalizeAnswer(answer, ignoresAccents) {
-  const normalized = normalizeText(answer)
-  return ignoresAccents ? removeAccents(normalized) : normalized
-}
-
-function isCorrectAnswer(givenAnswer, { correctAnswer, ignoresAccents }) {
-  return normalizeAnswer(givenAnswer, ignoresAccents) === normalizeAnswer(correctAnswer, ignoresAccents)
-}
+import { PASSING_RATE, QUESTION_TYPES, STEPS } from '@/constants/quiz'
+import { getLatestAttempts } from '@/utils/quizGrading'
 
 function summarizeScore(items) {
   return {
@@ -17,9 +8,17 @@ function summarizeScore(items) {
   }
 }
 
-function buildSection(subject, gradedQuestions) {
-  const items = gradedQuestions.filter((item) => item.subject === subject)
-  return { title: subject, ...summarizeScore(items), items }
+function buildSection(subjectId, gradedQuestions) {
+  const items = gradedQuestions.filter((item) => item.subjectId === subjectId)
+  const score = summarizeScore(items)
+  return {
+    subjectId,
+    title: items[0].subject,
+    ...score,
+    hasPassed: score.correctCount / score.total > PASSING_RATE,
+    canRetry: score.correctCount < score.total,
+    items,
+  }
 }
 
 export function buildQuestionView({ step, questions, answers, currentIndex }) {
@@ -32,6 +31,8 @@ export function buildQuestionView({ step, questions, answers, currentIndex }) {
   return {
     id: question.id,
     subject: question.subject,
+    subjectId: question.subjectId,
+    difficulty: question.difficulty,
     type: question.type,
     prompt: question.prompt,
     hint: question.hint,
@@ -46,21 +47,25 @@ export function buildQuestionView({ step, questions, answers, currentIndex }) {
   }
 }
 
-export function buildResult({ step, questions, answers }) {
+export function buildResult({ step, attempts }) {
   if (step !== STEPS.RESULT) return null
 
-  const gradedQuestions = questions.map((question, index) => ({
-    id: question.id,
-    subject: question.subject,
-    prompt: question.prompt,
-    givenAnswer: answers[index],
-    correctAnswer: question.correctAnswer,
-    isCorrect: isCorrectAnswer(answers[index], question),
+  const gradedQuestions = getLatestAttempts(attempts).map((attempt) => ({
+    id: attempt.id,
+    subject: attempt.subject,
+    subjectId: attempt.subjectId,
+    difficulty: attempt.difficulty,
+    prompt: attempt.prompt,
+    givenAnswer: attempt.answer,
+    correctAnswer: attempt.correctAnswer,
+    isCorrect: attempt.isCorrect,
   }))
-  const subjects = [...new Set(gradedQuestions.map(({ subject }) => subject))]
+  const subjectIds = [...new Set(gradedQuestions.map(({ subjectId }) => subjectId))]
+  const sections = subjectIds.map((subjectId) => buildSection(subjectId, gradedQuestions))
 
   return {
     ...summarizeScore(gradedQuestions),
-    sections: subjects.map((subject) => buildSection(subject, gradedQuestions)),
+    sections,
+    canExit: sections.every(({ hasPassed }) => hasPassed),
   }
 }

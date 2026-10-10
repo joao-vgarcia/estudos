@@ -1,16 +1,17 @@
 import Icon from '@/components/atoms/Icon'
 import Text from '@/components/atoms/Text'
+import { getSubjectBackground } from '@/constants/subjectColors'
 
 const statusStyles = {
   correct: { background: 'bg-positive', icon: 'check', label: 'Acertou' },
   wrong: { background: 'bg-negative', icon: 'x', label: 'Errou' },
 }
 
-export default function ResultItem({ prompt, givenAnswer, correctAnswer, isCorrect }) {
+export default function ResultItem({ subjectId, difficulty, prompt, givenAnswer, correctAnswer, isCorrect }) {
   const status = isCorrect ? statusStyles.correct : statusStyles.wrong
 
   return (
-    <li className="flex items-start gap-4 rounded-3xl bg-black/10 p-5">
+    <li className={`flex items-start gap-4 rounded-3xl p-5 ${getSubjectBackground(subjectId, difficulty)}`}>
       <span
         className={`flex size-12 shrink-0 items-center justify-center rounded-full text-white ${status.background}`}
       >

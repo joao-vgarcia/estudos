@@ -1,4 +1,4 @@
-import { QUESTIONS_PER_MODULE, QUESTION_TYPES } from '@/constants/quiz'
+import { DIFFICULTIES, QUESTIONS_PER_MODULE, QUESTION_TYPES } from '@/constants/quiz'
 import { randomItems } from '@/utils/random'
 import { normalizeText, removeAccents } from '@/utils/text'
 import { fakeRequest } from './fakeRequest'
@@ -12,6 +12,7 @@ export function getDictationQuestions({ entries, prompt, speechLocale, ignoresAc
     randomItems(entries, QUESTIONS_PER_MODULE).map(({ word, hint }, index) => ({
       id: index + 1,
       type: QUESTION_TYPES.DICTATION,
+      difficulty: DIFFICULTIES.MEDIUM,
       prompt,
       hint,
       correctAnswer: word,

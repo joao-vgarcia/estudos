@@ -9,6 +9,19 @@
   --color-positive-dark: #1d4f9e;
   --color-negative: #cb2e46;
   --color-negative-dark: #8f1f31;
+
+  --color-math-easy: #e66700;
+  --color-math-medium: #b95201;
+  --color-math-hard: #8e3c00;
+  --color-portuguese-easy: #9d74f8;
+  --color-portuguese-medium: #8054d6;
+  --color-portuguese-hard: #6434b4;
+  --color-english-easy: #02a998;
+  --color-english-medium: #028779;
+  --color-english-hard: #01675b;
+  --color-spanish-easy: #df58ac;
+  --color-spanish-medium: #bc378d;
+  --color-spanish-hard: #9a0a70;
 }
 
 body {

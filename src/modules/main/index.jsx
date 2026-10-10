@@ -8,14 +8,14 @@ import { STEPS } from '@/constants/quiz'
 import { useMain } from './hook'
 
 export default function MainModule() {
-  const { step, isLoading, questionView, result, onStart, onAnswer, onListen, onNext, onExit } = useMain()
+  const { step, isLoading, questionView, result, onStart, onRetry, onAnswer, onListen, onNext, onExit } = useMain()
 
   return (
     <PageLayout>
       {step === STEPS.START && <StartPanel title="Estudos" onStart={onStart} />}
 
       {step === STEPS.QUESTIONS && (
-        <Container>
+        <Container subjectId={questionView?.subjectId} difficulty={questionView?.difficulty}>
           {isLoading ? (
             <Text variant="muted">Carregando...</Text>
           ) : (
@@ -30,7 +30,7 @@ export default function MainModule() {
       {step === STEPS.RESULT && (
         <Container>
           <Text as="h2" variant="title">Resultado</Text>
-          <QuizResult {...result} onRestart={onStart} onExit={onExit} />
+          <QuizResult {...result} onRestart={onStart} onExit={onExit} onRetry={onRetry} />
         </Container>
       )}
     </PageLayout>

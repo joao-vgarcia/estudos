@@ -5,11 +5,12 @@ import {
   MULTIPLICATION_STATEMENTS,
   SUBTRACTION_STATEMENTS,
 } from '@/constants/math'
-import { QUESTIONS_PER_MODULE, QUESTION_TYPES } from '@/constants/quiz'
+import { DIFFICULTIES, QUESTION_TYPES } from '@/constants/quiz'
 import { isValidMathQuestion } from '@/utils/mathValidator'
 import { randomInt, randomItems, shuffle } from '@/utils/random'
 import { fakeRequest } from './fakeRequest'
 
+const QUESTIONS_PER_VARIANT = 2
 const OPTIONS_COUNT = 4
 const MAX_OPTION_OFFSET = 5
 
@@ -20,7 +21,10 @@ const OPERATIONS = {
     rightRange: [1, 99],
     calculate: (left, right) => left + right,
     statements: ADDITION_STATEMENTS,
-    type: QUESTION_TYPES.NUMBER,
+    variants: [
+      { type: QUESTION_TYPES.MULTIPLE_CHOICE, difficulty: DIFFICULTIES.EASY, resultRange: [30, 60] },
+      { type: QUESTION_TYPES.NUMBER, difficulty: DIFFICULTIES.MEDIUM, resultRange: [2, 50] },
+    ],
   },
   [MATH_OPERATIONS.SUBTRACTION]: {
     symbol: '-',
@@ -28,7 +32,10 @@ const OPERATIONS = {
     rightRange: [1, 100],
     calculate: (left, right) => left - right,
     statements: SUBTRACTION_STATEMENTS,
-    type: QUESTION_TYPES.NUMBER,
+    variants: [
+      { type: QUESTION_TYPES.MULTIPLE_CHOICE, difficulty: DIFFICULTIES.EASY, resultRange: [30, 60] },
+      { type: QUESTION_TYPES.NUMBER, difficulty: DIFFICULTIES.MEDIUM, resultRange: [2, 50] },
+    ],
   },
   [MATH_OPERATIONS.MULTIPLICATION]: {
     symbol: '×',
@@ -36,7 +43,10 @@ const OPERATIONS = {
     rightRange: [2, 12],
     calculate: (left, right) => left * right,
     statements: MULTIPLICATION_STATEMENTS,
-    type: QUESTION_TYPES.MULTIPLE_CHOICE,
+    variants: [
+      { type: QUESTION_TYPES.MULTIPLE_CHOICE, difficulty: DIFFICULTIES.EASY, resultRange: [2, 50] },
+      { type: QUESTION_TYPES.NUMBER, difficulty: DIFFICULTIES.MEDIUM, resultRange: [2, 30] },
+    ],
   },
   [MATH_OPERATIONS.DIVISION]: {
     symbol: '÷',
@@ -44,7 +54,10 @@ const OPERATIONS = {
     rightRange: [2, 10],
     calculate: (left, right) => left / right,
     statements: DIVISION_STATEMENTS,
-    type: QUESTION_TYPES.MULTIPLE_CHOICE,
+    variants: [
+      { type: QUESTION_TYPES.MULTIPLE_CHOICE, difficulty: DIFFICULTIES.EASY, resultRange: [2, 50] },
+      { type: QUESTION_TYPES.NUMBER, difficulty: DIFFICULTIES.MEDIUM, resultRange: [2, 30] },
+    ],
   },
 }
 
@@ -54,30 +67,33 @@ function generateOperands({ leftRange, rightRange, calculate }) {
   return { left, right, result: calculate(left, right) }
 }
 
-function generateValidOperands(config) {
+function generateValidOperands(config, resultRange) {
   let operands
   do {
     operands = generateOperands(config)
-  } while (!isValidMathQuestion(operands))
+  } while (!isValidMathQuestion(operands, resultRange))
   return operands
 }
 
-function generateUniqueOperands(config, count) {
-  const operandsByKey = new Map()
-  while (operandsByKey.size < count) {
-    const operands = generateValidOperands(config)
-    operandsByKey.set(`${operands.left} ${config.symbol} ${operands.right}`, operands)
-  }
-  return [...operandsByKey.values()]
+function generateUniqueOperands(config, resultRange, usedKeys) {
+  let operands
+  let key
+  do {
+    operands = generateValidOperands(config, resultRange)
+    key = `${operands.left} ${config.symbol} ${operands.right}`
+  } while (usedKeys.has(key))
+  usedKeys.add(key)
+  return operands
 }
 
 function generateOperationQuestions(operation) {
   const config = OPERATIONS[operation]
-  const statements = randomItems(config.statements, QUESTIONS_PER_MODULE)
-  const operandsList = generateUniqueOperands(config, statements.length)
-  return statements.map((statement, index) => {
-    const { left, right, result } = operandsList[index]
-    return { type: config.type, prompt: statement(left, right), result }
+  const variants = config.variants.flatMap((variant) => new Array(QUESTIONS_PER_VARIANT).fill(variant))
+  const statements = randomItems(config.statements, variants.length)
+  const usedKeys = new Set()
+  return variants.map(({ type, difficulty, resultRange }, index) => {
+    const { left, right, result } = generateUniqueOperands(config, resultRange, usedKeys)
+    return { type, difficulty, prompt: statements[index](left, right), result }
   })
 }
 
@@ -93,9 +109,10 @@ function generateOptions(result) {
 export function getMathQuestions() {
   const questions = Object.values(MATH_OPERATIONS).flatMap(generateOperationQuestions)
   return fakeRequest(
-    shuffle(questions).map(({ type, prompt, result }, index) => ({
+    shuffle(questions).map(({ type, difficulty, prompt, result }, index) => ({
       id: index + 1,
       type,
+      difficulty,
       prompt,
       ...(type === QUESTION_TYPES.MULTIPLE_CHOICE && { options: generateOptions(result) }),
       correctAnswer: String(result),

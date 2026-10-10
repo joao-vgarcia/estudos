@@ -1,6 +1,7 @@
 import { create } from 'zustand'
 import { STEPS } from '@/constants/quiz'
-import { fetchQuizQuestions } from '@/services/quizService'
+import { fetchQuizQuestions, fetchRetryQuestions } from '@/services/quizService'
+import { getLatestAttempts, isCorrectAnswer } from '@/utils/quizGrading'
 import { buildQuestionView, buildResult } from './quizViewModels'
 
 const initialState = {
@@ -9,6 +10,7 @@ const initialState = {
   questions: [],
   answers: [],
   currentIndex: 0,
+  attempts: [],
 }
 
 export const useAppStore = create((set, get) => {
@@ -17,15 +19,40 @@ export const useAppStore = create((set, get) => {
     set({ ...partialState, questionView: buildQuestionView(nextState), result: buildResult(nextState) })
   }
 
+  const startRound = async (attempts, fetchQuestions) => {
+    update({ ...initialState, step: STEPS.QUESTIONS, isLoading: true, attempts })
+    const fetchedQuestions = await fetchQuestions()
+    const questions = fetchedQuestions.map((question, index) => {
+      const id = attempts.length + index
+      return { ...question, id, slotId: question.slotId ?? id }
+    })
+    update({ questions, answers: new Array(questions.length).fill(null), isLoading: false })
+  }
+
+  const finishRound = () => {
+    const { questions, answers, attempts } = get()
+    const roundAttempts = questions.map((question, index) => ({
+      ...question,
+      answer: answers[index],
+      isCorrect: isCorrectAnswer(answers[index], question),
+    }))
+    update({ step: STEPS.RESULT, attempts: [...attempts, ...roundAttempts] })
+  }
+
   return {
     ...initialState,
     questionView: null,
     result: null,
 
-    startQuiz: async () => {
-      update({ ...initialState, step: STEPS.QUESTIONS, isLoading: true })
-      const questions = await fetchQuizQuestions()
-      update({ questions, answers: new Array(questions.length).fill(null), isLoading: false })
+    startQuiz: () => startRound([], fetchQuizQuestions),
+
+    retrySubject: (subjectId) => {
+      const { attempts } = get()
+      const missedQuestions = getLatestAttempts(attempts).filter(
+        (attempt) => attempt.subjectId === subjectId && !attempt.isCorrect,
+      )
+      if (missedQuestions.length === 0) return
+      return startRound(attempts, () => fetchRetryQuestions(missedQuestions, attempts))
     },
 
     answerQuestion: (answer) => {
@@ -37,7 +64,7 @@ export const useAppStore = create((set, get) => {
       const { questions, answers, currentIndex } = get()
       if (answers[currentIndex] == null) return
       if (currentIndex === questions.length - 1) {
-        update({ step: STEPS.RESULT })
+        finishRound()
         return
       }
       update({ currentIndex: currentIndex + 1 })

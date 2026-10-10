@@ -11,11 +11,19 @@ export function useMain() {
   const startQuiz = useAppStore((state) => state.startQuiz)
   const answerQuestion = useAppStore((state) => state.answerQuestion)
   const goToNextQuestion = useAppStore((state) => state.goToNextQuestion)
+  const retrySubject = useAppStore((state) => state.retrySubject)
 
   const onStart = useCallback(() => {
     enterFullscreen()
     startQuiz()
   }, [startQuiz])
+  const onRetry = useCallback(
+    (subjectId) => {
+      enterFullscreen()
+      retrySubject(subjectId)
+    },
+    [retrySubject],
+  )
   const onListen = useCallback(
     () => speak(questionView?.speechText, questionView?.speechLocale),
     [questionView?.speechText, questionView?.speechLocale],
@@ -31,6 +39,7 @@ export function useMain() {
     questionView,
     result,
     onStart,
+    onRetry,
     onAnswer: answerQuestion,
     onListen,
     onNext,
