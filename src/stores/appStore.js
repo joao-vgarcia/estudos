@@ -1,7 +1,7 @@
 import { create } from 'zustand'
 import { STEPS } from '@/constants/quiz'
 import { fetchQuizQuestions, fetchRetryQuestions } from '@/services/quizService'
-import { getLatestAttempts, isCorrectAnswer } from '@/utils/quizGrading'
+import { getLatestAttempts, isAnswered, isCorrectAnswer } from '@/utils/quizGrading'
 import { buildQuestionView, buildResult } from './quizViewModels'
 
 const initialState = {
@@ -26,7 +26,7 @@ export const useAppStore = create((set, get) => {
       const id = attempts.length + index
       return { ...question, id, slotId: question.slotId ?? id }
     })
-    update({ questions, answers: new Array(questions.length).fill(null), isLoading: false })
+    update({ questions, answers: questions.map(({ parts }) => parts?.map(() => null) ?? null), isLoading: false })
   }
 
   const finishRound = () => {
@@ -55,14 +55,17 @@ export const useAppStore = create((set, get) => {
       return startRound(attempts, () => fetchRetryQuestions(missedQuestions, attempts))
     },
 
-    answerQuestion: (answer) => {
+    answerQuestion: (answer, partIndex) => {
       const { answers, currentIndex } = get()
-      update({ answers: answers.with(currentIndex, answer === '' ? null : answer) })
+      const value = answer === '' ? null : answer
+      const currentAnswer = answers[currentIndex]
+      const nextAnswer = Array.isArray(currentAnswer) ? currentAnswer.with(partIndex, value) : value
+      update({ answers: answers.with(currentIndex, nextAnswer) })
     },
 
     goToNextQuestion: () => {
       const { questions, answers, currentIndex } = get()
-      if (answers[currentIndex] == null) return
+      if (!isAnswered(answers[currentIndex])) return
       if (currentIndex === questions.length - 1) {
         finishRound()
         return

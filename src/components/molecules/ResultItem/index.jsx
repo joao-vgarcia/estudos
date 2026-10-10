@@ -7,7 +7,16 @@ const statusStyles = {
   wrong: { background: 'bg-negative', icon: 'x', label: 'Errou' },
 }
 
-export default function ResultItem({ subjectId, difficulty, prompt, givenAnswer, correctAnswer, isCorrect }) {
+function AnswerDetails({ givenAnswer, correctAnswer, isCorrect }) {
+  return (
+    <>
+      <Text variant="muted">Sua resposta: {givenAnswer}</Text>
+      {!isCorrect && <Text variant="muted">Resposta certa: {correctAnswer}</Text>}
+    </>
+  )
+}
+
+export default function ResultItem({ subjectId, difficulty, prompt, givenAnswer, correctAnswer, parts, isCorrect }) {
   const status = isCorrect ? statusStyles.correct : statusStyles.wrong
 
   return (
@@ -20,8 +29,16 @@ export default function ResultItem({ subjectId, difficulty, prompt, givenAnswer,
       </span>
       <div className="flex flex-col gap-1">
         <Text>{prompt}</Text>
-        <Text variant="muted">Sua resposta: {givenAnswer}</Text>
-        {!isCorrect && <Text variant="muted">Resposta certa: {correctAnswer}</Text>}
+        {parts ? (
+          parts.map((part) => (
+            <div key={part.label} className="mt-3 flex flex-col gap-1">
+              <Text>{part.label}</Text>
+              <AnswerDetails {...part} />
+            </div>
+          ))
+        ) : (
+          <AnswerDetails givenAnswer={givenAnswer} correctAnswer={correctAnswer} isCorrect={isCorrect} />
+        )}
       </div>
     </li>
   )

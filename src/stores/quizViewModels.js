@@ -1,5 +1,5 @@
 import { PASSING_RATE, QUESTION_TYPES, STEPS } from '@/constants/quiz'
-import { getLatestAttempts } from '@/utils/quizGrading'
+import { getLatestAttempts, gradeParts, isAnswered } from '@/utils/quizGrading'
 
 function summarizeScore(items) {
   return {
@@ -38,11 +38,12 @@ export function buildQuestionView({ step, questions, answers, currentIndex }) {
     hint: question.hint,
     options: question.options,
     answer: answer ?? '',
+    parts: question.parts?.map(({ label }, index) => ({ label, answer: answer[index] ?? '' })),
     speechText: question.type === QUESTION_TYPES.DICTATION ? question.correctAnswer : undefined,
     speechLocale: question.speechLocale,
     position: subjectQuestions.indexOf(question) + 1,
     total: subjectQuestions.length,
-    canAdvance: answer != null,
+    canAdvance: isAnswered(answer),
     isLastQuestion: currentIndex === questions.length - 1,
   }
 }
@@ -58,6 +59,7 @@ export function buildResult({ step, attempts }) {
     prompt: attempt.prompt,
     givenAnswer: attempt.answer,
     correctAnswer: attempt.correctAnswer,
+    parts: attempt.parts && gradeParts(attempt.answer, attempt),
     isCorrect: attempt.isCorrect,
   }))
   const subjectIds = [...new Set(gradedQuestions.map(({ subjectId }) => subjectId))]

@@ -1,6 +1,7 @@
 import Button from '@/components/atoms/Button'
 import Text from '@/components/atoms/Text'
 import DictationAnswer from '@/components/molecules/DictationAnswer'
+import MultiNumberAnswer from '@/components/molecules/MultiNumberAnswer'
 import MultipleChoiceAnswer from '@/components/molecules/MultipleChoiceAnswer'
 import NumberAnswer from '@/components/molecules/NumberAnswer'
 import { QUESTION_TYPES } from '@/constants/quiz'
@@ -18,6 +19,7 @@ export default function QuestionCard({
   hint,
   options,
   answer,
+  parts,
   position,
   total,
   canAdvance,
@@ -26,7 +28,7 @@ export default function QuestionCard({
   onListen,
   onNext,
 }) {
-  const AnswerField = answerFieldByType[type]
+  const AnswerField = parts ? MultiNumberAnswer : answerFieldByType[type]
 
   const handleSubmit = (event) => {
     event.preventDefault()
@@ -40,7 +42,14 @@ export default function QuestionCard({
         <Text as="h3" variant="subtitle">{prompt}</Text>
         {hint && <Text variant="muted">{hint}</Text>}
       </div>
-      <AnswerField key={id} options={options} answer={answer} onAnswer={onAnswer} onListen={onListen} />
+      <AnswerField
+        key={id}
+        options={options}
+        answer={answer}
+        parts={parts}
+        onAnswer={onAnswer}
+        onListen={onListen}
+      />
       <div className="flex justify-end">
         <Button type="submit" variant="primary" endIcon="arrow-right" disabled={!canAdvance}>
           {isLastQuestion ? 'Ver resultado' : 'Próxima'}
