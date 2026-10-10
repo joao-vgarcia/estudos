@@ -1,15 +1,15 @@
 import { QUESTION_TYPES } from '@/constants/quiz'
 import { shuffle } from '@/utils/random'
-import { getEnglishVocabularyQuestions } from './englishService'
-import { getEasyQuestions, getHardQuestions } from './mathService'
-import { getDictationQuestions, getPluralQuestions, getSpellingQuestions } from './portugueseService'
-import { getSpanishVocabularyQuestions } from './spanishService'
+import { getEnglishDictationQuestions, getEnglishVocabularyQuestions } from './englishService'
+import { getMathQuestions } from './mathService'
+import { getPluralQuestions, getPortugueseDictationQuestions, getSpellingQuestions } from './portugueseService'
+import { getSpanishDictationQuestions, getSpanishVocabularyQuestions } from './spanishService'
 
 const SUBJECTS = [
-  { title: 'Matemática', fetchers: [getEasyQuestions, getHardQuestions] },
-  { title: 'Português', fetchers: [getPluralQuestions, getSpellingQuestions, getDictationQuestions] },
-  { title: 'Inglês', fetchers: [getEnglishVocabularyQuestions] },
-  { title: 'Espanhol', fetchers: [getSpanishVocabularyQuestions] },
+  { title: 'Matemática', fetchers: [getMathQuestions] },
+  { title: 'Português', fetchers: [getPluralQuestions, getSpellingQuestions, getPortugueseDictationQuestions] },
+  { title: 'Inglês', fetchers: [getEnglishVocabularyQuestions, getEnglishDictationQuestions] },
+  { title: 'Espanhol', fetchers: [getSpanishVocabularyQuestions, getSpanishDictationQuestions] },
 ]
 
 function prepareQuestion(question, subject) {

@@ -16,7 +16,10 @@ export function useMain() {
     enterFullscreen()
     startQuiz()
   }, [startQuiz])
-  const onListen = useCallback(() => speak(questionView?.speechText), [questionView?.speechText])
+  const onListen = useCallback(
+    () => speak(questionView?.speechText, questionView?.speechLocale),
+    [questionView?.speechText, questionView?.speechLocale],
+  )
   const onNext = useCallback(() => {
     stopSpeaking()
     goToNextQuestion()

@@ -1,8 +1,13 @@
 import { QUESTION_TYPES, STEPS } from '@/constants/quiz'
-import { normalizeText } from '@/utils/text'
+import { normalizeText, removeAccents } from '@/utils/text'
 
-function isCorrectAnswer(givenAnswer, correctAnswer) {
-  return normalizeText(givenAnswer) === normalizeText(correctAnswer)
+function normalizeAnswer(answer, ignoresAccents) {
+  const normalized = normalizeText(answer)
+  return ignoresAccents ? removeAccents(normalized) : normalized
+}
+
+function isCorrectAnswer(givenAnswer, { correctAnswer, ignoresAccents }) {
+  return normalizeAnswer(givenAnswer, ignoresAccents) === normalizeAnswer(correctAnswer, ignoresAccents)
 }
 
 function summarizeScore(items) {
@@ -29,9 +34,11 @@ export function buildQuestionView({ step, questions, answers, currentIndex }) {
     subject: question.subject,
     type: question.type,
     prompt: question.prompt,
+    hint: question.hint,
     options: question.options,
     answer: answer ?? '',
     speechText: question.type === QUESTION_TYPES.DICTATION ? question.correctAnswer : undefined,
+    speechLocale: question.speechLocale,
     position: subjectQuestions.indexOf(question) + 1,
     total: subjectQuestions.length,
     canAdvance: answer != null,
@@ -48,7 +55,7 @@ export function buildResult({ step, questions, answers }) {
     prompt: question.prompt,
     givenAnswer: answers[index],
     correctAnswer: question.correctAnswer,
-    isCorrect: isCorrectAnswer(answers[index], question.correctAnswer),
+    isCorrect: isCorrectAnswer(answers[index], question),
   }))
   const subjects = [...new Set(gradedQuestions.map(({ subject }) => subject))]
 

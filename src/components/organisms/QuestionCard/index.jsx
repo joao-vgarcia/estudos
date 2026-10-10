@@ -15,6 +15,7 @@ export default function QuestionCard({
   id,
   type,
   prompt,
+  hint,
   options,
   answer,
   position,
@@ -35,7 +36,10 @@ export default function QuestionCard({
   return (
     <form className="flex flex-col gap-8" onSubmit={handleSubmit}>
       <Text variant="muted">Questão {position} de {total}</Text>
-      <Text as="h3" variant="subtitle">{prompt}</Text>
+      <div className="flex flex-col gap-2">
+        <Text as="h3" variant="subtitle">{prompt}</Text>
+        {hint && <Text variant="muted">{hint}</Text>}
+      </div>
       <AnswerField key={id} options={options} answer={answer} onAnswer={onAnswer} onListen={onListen} />
       <div className="flex justify-end">
         <Button type="submit" variant="primary" endIcon="arrow-right" disabled={!canAdvance}>
