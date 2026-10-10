@@ -7,3 +7,14 @@ export async function getQuestoesGramatica() {
     { id: 3, enunciado: 'Qual palavra está escrita corretamente?', alternativas: ['Excessão', 'Exceção', 'Esceção', 'Exseção'], resposta: 'Exceção' },
   ])
 }
+
+export async function getDitado() {
+  return await fakeRequest(
+    ['gato', 'avião', 'batata', 'futebol'].map((palavra, i) => ({
+      id: i + 1,
+      tipo: 'ditado',
+      enunciado: 'Ditado: ouça e escreva a palavra',
+      resposta: palavra,
+    })),
+  )
+}

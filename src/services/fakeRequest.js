@@ -1,4 +1,3 @@
-// Simula uma chamada externa: devolve `data` depois de `ms` milissegundos.
-export function fakeRequest(data, ms = 500) {
+export function fakeRequest(data, ms = 300) {
   return new Promise((resolve) => setTimeout(() => resolve(data), ms))
 }

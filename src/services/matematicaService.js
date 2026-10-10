@@ -20,12 +20,11 @@ export async function getTabuada(numero) {
   return await fakeRequest(
     Array.from({ length: 10 }, (_, i) => {
       const multiplicador = i + 1
-      const resultado = numero * multiplicador
       return {
         id: multiplicador,
+        tipo: 'numero',
         enunciado: `${numero} × ${multiplicador} = ?`,
-        alternativas: [resultado, resultado + numero, resultado - 1, resultado + 2].map(String),
-        resposta: String(resultado),
+        resposta: String(numero * multiplicador),
       }
     }),
   )

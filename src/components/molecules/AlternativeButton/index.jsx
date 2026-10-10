@@ -2,9 +2,7 @@ import Button from '@/components/atoms/Button'
 
 const variantePorStatus = {
   idle: 'secondary',
-  correct: 'correct',
-  wrong: 'wrong',
-  dimmed: 'dimmed',
+  selected: 'selected',
 }
 
 export default function AlternativeButton({ label, status = 'idle', onClick }) {

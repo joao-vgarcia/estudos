@@ -1,11 +1,13 @@
-import { ArrowRight, BookOpen, Calculator, Languages, Sigma } from 'lucide-react'
+import { ArrowRight, Check, LogOut, Play, RotateCcw, Volume2, X } from 'lucide-react'
 
 const icones = {
   'arrow-right': ArrowRight,
-  book: BookOpen,
-  calculator: Calculator,
-  languages: Languages,
-  sigma: Sigma,
+  check: Check,
+  'log-out': LogOut,
+  play: Play,
+  'rotate-ccw': RotateCcw,
+  'volume-2': Volume2,
+  x: X,
 }
 
 export default function Icon({ name, size = 18 }) {
