@@ -9,3 +9,5 @@ export const QUESTION_TYPES = {
   NUMBER: 'number',
   DICTATION: 'dictation',
 }
+
+export const QUESTIONS_PER_MODULE = 5

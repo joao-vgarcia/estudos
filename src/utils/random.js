@@ -16,3 +16,7 @@ export function shuffle(list) {
 export function randomItem(list) {
   return list[randomInt(0, list.length - 1)]
 }
+
+export function randomItems(list, count) {
+  return shuffle(list).slice(0, count)
+}

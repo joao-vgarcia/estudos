@@ -1,9 +1,7 @@
-import { fakeRequest } from './fakeRequest'
+import { ENGLISH } from '@/constants/dictionary/english'
+import { WRONG_ENGLISH } from '@/constants/dictionary/wrongEnglish'
+import { getTranslationQuestions } from './translationService'
 
-export function getVocabularyQuestions() {
-  return fakeRequest([
-    { id: 1, prompt: 'Como se diz "cachorro" em inglês?', options: ['Cat', 'Dog', 'Bird', 'Fish'], correctAnswer: 'Dog' },
-    { id: 2, prompt: 'O que significa "apple"?', options: ['Banana', 'Uva', 'Maçã', 'Pera'], correctAnswer: 'Maçã' },
-    { id: 3, prompt: 'Como se diz "azul" em inglês?', options: ['Red', 'Green', 'Yellow', 'Blue'], correctAnswer: 'Blue' },
-  ])
+export function getEnglishVocabularyQuestions() {
+  return getTranslationQuestions({ language: 'inglês', translations: ENGLISH, wrongTranslations: WRONG_ENGLISH })
 }

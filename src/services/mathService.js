@@ -1,10 +1,9 @@
 import { MATH_OPERATIONS } from '@/constants/math'
-import { QUESTION_TYPES } from '@/constants/quiz'
+import { QUESTIONS_PER_MODULE, QUESTION_TYPES } from '@/constants/quiz'
 import { isValidMathQuestion } from '@/utils/mathValidator'
 import { randomInt, randomItem } from '@/utils/random'
 import { fakeRequest } from './fakeRequest'
 
-const QUESTIONS_PER_MODULE = 5
 const OPTIONS_COUNT = 4
 const MAX_OPTION_OFFSET = 5
 
