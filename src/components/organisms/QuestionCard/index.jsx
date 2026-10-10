@@ -13,10 +13,10 @@ export default function QuestionCard({
   onAvancar,
 }) {
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex flex-col gap-8">
       <Text variant="muted">{placar}</Text>
       <Text as="h3" variant="subtitle">{enunciado}</Text>
-      <div className="grid gap-2 sm:grid-cols-2">
+      <div className="grid gap-5 sm:grid-cols-2">
         {alternativas.map((alternativa) => (
           <AlternativeButton
             key={alternativa.label}
@@ -29,7 +29,7 @@ export default function QuestionCard({
       <div className="flex justify-end">
         <Button variant="primary" disabled={!podeAvancar} onClick={onAvancar}>
           {textoBotao}
-          <Icon name="arrow-right" />
+          <Icon name="arrow-right" size={32} />
         </Button>
       </div>
     </div>

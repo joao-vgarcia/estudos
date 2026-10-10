@@ -5,11 +5,11 @@ export default function MenuItem({ icon, label, active = false, onClick }) {
     <button
       type="button"
       onClick={onClick}
-      className={`flex w-full items-center gap-3 rounded-lg px-3 py-2 text-left text-sm font-medium transition-colors ${
-        active ? 'bg-indigo-600 text-white' : 'text-slate-700 hover:bg-slate-200'
+      className={`flex w-full items-center gap-4 rounded-2xl px-4 py-3 text-left text-xl font-semibold text-white transition-colors focus-visible:outline-4 focus-visible:outline-white ${
+        active ? 'bg-white/25 ring-4 ring-white' : 'hover:bg-white/15'
       }`}
     >
-      <Icon name={icon} />
+      <Icon name={icon} size={28} />
       <span>{label}</span>
     </button>
   )

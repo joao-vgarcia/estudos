@@ -1,6 +1,6 @@
 export default function Container({ children }) {
   return (
-    <section className="flex flex-col gap-4 rounded-2xl bg-white p-6 shadow-sm ring-1 ring-slate-200">
+    <section className="flex flex-col gap-8 rounded-[2.5rem] bg-black/10 p-6 md:p-10">
       {children}
     </section>
   )

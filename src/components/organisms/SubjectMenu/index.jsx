@@ -3,7 +3,7 @@ import MenuItem from '@/components/molecules/MenuItem'
 
 export default function SubjectMenu({ titulo, itens, onSelecionar }) {
   return (
-    <nav className="flex flex-col gap-2">
+    <nav className="flex flex-col gap-4">
       <Text as="h1" variant="title">{titulo}</Text>
       {itens.map((item) => (
         <MenuItem

@@ -1,1 +1,25 @@
 @import "tailwindcss";
+
+@theme {
+  /* Fontes lúdicas: Bubblegum Sans nos títulos, Fredoka no resto */
+  --font-sans: "Fredoka", ui-rounded, system-ui, sans-serif;
+  --font-display: "Bubblegum Sans", "Fredoka", ui-rounded, system-ui, sans-serif;
+
+  /* Paleta tirada da arte de referência */
+  --color-fundo: #a4ae60;
+  --color-positivo: #2b6fd8;
+  --color-positivo-escuro: #1d4f9e;
+  --color-negativo: #cb2e46;
+  --color-negativo-escuro: #8f1f31;
+}
+
+body {
+  min-height: 100vh;
+  color: white;
+  background-color: var(--color-fundo);
+  /* Vinheta suave + granulado de papel, como na arte */
+  background-image:
+    radial-gradient(ellipse at center, transparent 45%, rgb(0 0 0 / 0.14)),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.12 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23g)'/%3E%3C/svg%3E");
+  background-attachment: fixed;
+}
