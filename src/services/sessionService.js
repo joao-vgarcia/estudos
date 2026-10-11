@@ -1,11 +1,13 @@
 import { LEVELS } from '@/constants/levels'
 import { SESSION_DURATION_MS, SESSION_STORAGE_KEY } from '@/constants/session'
 import { getEarnedLeisureMs, getRemainingLeisureMs, isLeisureRunning } from '@/utils/leisure'
+import { unlockNextLevel } from '@/utils/levels'
 
-function createSession() {
+function createSession(unlockedLevels = []) {
   return {
     startedAt: null,
     repetitions: LEVELS.map(({ repetitions }) => repetitions),
+    unlockedLevels,
     earnedMinutes: 0,
     spentLeisureMs: 0,
     leisureStartedAt: null,
@@ -18,6 +20,7 @@ function isValidSession(session) {
   return (
     Array.isArray(session?.repetitions) &&
     session.repetitions.length === LEVELS.length &&
+    Array.isArray(session.unlockedLevels) &&
     Number.isFinite(session.earnedMinutes) &&
     Number.isFinite(session.spentLeisureMs)
   )
@@ -48,7 +51,7 @@ export function isSessionExpired({ startedAt }) {
 
 export function loadSession() {
   const session = readSession()
-  return isSessionExpired(session) ? saveSession(createSession()) : session
+  return isSessionExpired(session) ? saveSession(createSession(session.unlockedLevels)) : session
 }
 
 export function startSession() {
@@ -65,8 +68,9 @@ function updateSession(change) {
 }
 
 export function completeLevel(levelIndex, minutes) {
-  return updateSession(({ repetitions, earnedMinutes }) => ({
+  return updateSession(({ repetitions, unlockedLevels, earnedMinutes }) => ({
     repetitions: repetitions.with(levelIndex, Math.max(repetitions[levelIndex] - 1, 0)),
+    unlockedLevels: unlockNextLevel(unlockedLevels, levelIndex),
     earnedMinutes: earnedMinutes + minutes,
   }))
 }

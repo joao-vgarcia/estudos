@@ -12,6 +12,16 @@ import {
   TRUE_FALSE_STATEMENTS,
 } from '@/constants/math'
 import { DIFFICULTIES, QUESTIONS_PER_MODULE, QUESTION_TYPES } from '@/constants/quiz'
+import {
+  buildEvaluationSteps,
+  buildSolvingSteps,
+  combine,
+  createNumber,
+  formatCalculation,
+  formatEquation,
+  getNumbers,
+  getOperationNodes,
+} from '@/utils/expression'
 import { isValidMathQuestion } from '@/utils/mathValidator'
 import { randomInt, randomItem, randomItems, shuffle } from '@/utils/random'
 import { fakeRequest } from './fakeRequest'
@@ -24,6 +34,10 @@ const MULTI_STEP_RESULT_RANGE = [1, 100]
 const TRUE_FALSE_RESULT_RANGE = [2, 100]
 const MAX_CLAIM_OFFSET = 3
 const COUNTING_HINT = 'Dica: conte as fileiras e quantos há em cada uma.'
+const EQUATION_INSTRUCTION = 'Descubra qual número fica no lugar do ?.'
+const TIMES_TABLE_HINT = 'Comece pela conta mais de dentro dos parênteses e troque cada resultado por uma letra.'
+const EQUATION_HINT = 'Faça a conta ao contrário para descobrir o ?.'
+const EXPRESSION_FACTOR_RANGE = [2, 10]
 
 const COUNTING_VARIANTS = [
   { type: QUESTION_TYPES.MULTIPLE_CHOICE, difficulty: DIFFICULTIES.EASY, rowsRange: [2, 4], columnsRange: [2, 5] },
@@ -80,6 +94,97 @@ const OPERATIONS = {
     ],
   },
 }
+
+const EXPRESSION_OPERATIONS = {
+  [MATH_OPERATIONS.ADDITION]: {
+    symbol: '+',
+    calculate: (left, right) => left + right,
+    operandRange: ({ termMax }) => [1, termMax],
+    pickOperand: (value, isFirst, { termMax }) => randomInt(1, termMax),
+    findLeft: (result, right) => `${result} − ${right}`,
+    findRight: (result, left) => `${result} − ${left}`,
+  },
+  [MATH_OPERATIONS.SUBTRACTION]: {
+    symbol: '−',
+    calculate: (left, right) => left - right,
+    operandRange: ({ termMax }) => [1, termMax],
+    pickOperand: (value, isFirst, { termMax }) => (isFirst ? value : 0) + randomInt(1, termMax),
+    findLeft: (result, right) => `${result} + ${right}`,
+    findRight: (result, left) => `${left} − ${result}`,
+  },
+  [MATH_OPERATIONS.MULTIPLICATION]: {
+    symbol: '×',
+    calculate: (left, right) => left * right,
+    operandRange: () => EXPRESSION_FACTOR_RANGE,
+    pickOperand: () => randomInt(...EXPRESSION_FACTOR_RANGE),
+    findLeft: (result, right) => `${result} ÷ ${right}`,
+    findRight: (result, left) => `${result} ÷ ${left}`,
+  },
+  [MATH_OPERATIONS.DIVISION]: {
+    symbol: '÷',
+    calculate: (left, right) => left / right,
+    operandRange: () => EXPRESSION_FACTOR_RANGE,
+    pickOperand: (value, isFirst) => (isFirst ? value : 1) * randomInt(...EXPRESSION_FACTOR_RANGE),
+    findLeft: (result, right) => `${result} × ${right}`,
+    findRight: (result, left) => `${left} ÷ ${result}`,
+  },
+}
+
+const ADDITION_AND_SUBTRACTION = [MATH_OPERATIONS.ADDITION, MATH_OPERATIONS.SUBTRACTION]
+
+const EASY_EXPRESSION = {
+  type: QUESTION_TYPES.MULTIPLE_CHOICE,
+  difficulty: DIFFICULTIES.EASY,
+  operations: ADDITION_AND_SUBTRACTION,
+  numberCounts: [2],
+  minOperationKinds: 1,
+  termMax: 20,
+  valueMax: 20,
+  resultRange: [1, 20],
+}
+
+const MEDIUM_EXPRESSION = {
+  type: QUESTION_TYPES.NUMBER,
+  difficulty: DIFFICULTIES.MEDIUM,
+  operations: ADDITION_AND_SUBTRACTION,
+  numberCounts: [2],
+  minOperationKinds: 1,
+  termMax: 40,
+  valueMax: 40,
+  resultRange: [1, 40],
+}
+
+const TIMES_TABLE_VARIANTS = [
+  EASY_EXPRESSION,
+  MEDIUM_EXPRESSION,
+  {
+    type: QUESTION_TYPES.NUMBER,
+    difficulty: DIFFICULTIES.HARD,
+    operations: [...ADDITION_AND_SUBTRACTION, MATH_OPERATIONS.MULTIPLICATION],
+    numberCounts: [3],
+    minOperationKinds: 2,
+    termMax: 60,
+    valueMax: 60,
+    resultRange: [1, 60],
+    hasHint: true,
+  },
+]
+
+const EQUATION_VARIANTS = [
+  EASY_EXPRESSION,
+  MEDIUM_EXPRESSION,
+  {
+    type: QUESTION_TYPES.NUMBER,
+    difficulty: DIFFICULTIES.HARD,
+    operations: ADDITION_AND_SUBTRACTION,
+    numberCounts: [2],
+    minOperationKinds: 1,
+    termMax: 60,
+    valueMax: 60,
+    resultRange: [1, 60],
+    hasHint: true,
+  },
+]
 
 function limitRange([min, max], maxResult = max) {
   return [min, Math.min(max, maxResult)]
@@ -216,4 +321,92 @@ export function getVisualCountingQuestions({ maxResult = Infinity } = {}) {
   return fakeRequest(
     variants.map((variant, index) => ({ id: index + 1, ...generateCountingQuestion(items[index], variant, maxResult) })),
   )
+}
+
+function pickExpressionOperations({ operations, numberCounts, minOperationKinds }) {
+  let keys
+  do {
+    keys = Array.from({ length: randomItem(numberCounts) - 1 }, () => randomItem(operations))
+  } while (new Set(keys).size < minOperationKinds)
+  return keys.map((key) => EXPRESSION_OPERATIONS[key])
+}
+
+function appendOperation(node, operation, variant) {
+  const isFirst = randomInt(0, 1) === 1
+  const number = createNumber(operation.pickOperand(node.value, isFirst, variant))
+  return isFirst ? combine(operation, number, node) : combine(operation, node, number)
+}
+
+function buildExpression(operations, variant) {
+  const start = createNumber(randomInt(...operations[0].operandRange(variant)))
+  return operations.reduce((node, operation) => appendOperation(node, operation, variant), start)
+}
+
+function isValidExpression(root, { valueMax, resultRange }) {
+  return (
+    getNumbers(root).every(({ value }) => value <= valueMax) &&
+    getOperationNodes(root).every((node) => isValidMathQuestion({ result: node.value }, [1, valueMax])) &&
+    isValidMathQuestion({ result: root.value }, resultRange)
+  )
+}
+
+function generateExpression(variant) {
+  const operations = pickExpressionOperations(variant)
+  let root
+  do {
+    root = buildExpression(operations, variant)
+  } while (!isValidExpression(root, variant))
+  return root
+}
+
+function createExpressionQuestion({ type, difficulty, hasHint }, { answer, solutionHint, ...fields }) {
+  return {
+    type,
+    difficulty,
+    ...fields,
+    ...(type === QUESTION_TYPES.MULTIPLE_CHOICE && { options: generateOptions(answer) }),
+    ...(hasHint && { solutionHint }),
+    correctAnswer: String(answer),
+  }
+}
+
+function buildTimesTableQuestion(root, variant) {
+  return createExpressionQuestion(variant, {
+    prompt: formatCalculation(root),
+    answer: root.value,
+    solutionHint: { message: TIMES_TABLE_HINT, steps: buildEvaluationSteps(root) },
+  })
+}
+
+function buildEquationQuestion(root, variant) {
+  const unknown = randomItem(getNumbers(root))
+  return createExpressionQuestion(variant, {
+    prompt: formatEquation(root, unknown),
+    hint: EQUATION_INSTRUCTION,
+    answer: unknown.value,
+    solutionHint: { message: EQUATION_HINT, steps: buildSolvingSteps(root, unknown) },
+  })
+}
+
+function getExpressionQuestions(variants, buildQuestion) {
+  const usedPrompts = new Set()
+  const questions = variants.flatMap((variant) =>
+    Array.from({ length: QUESTIONS_PER_VARIANT }, () => {
+      let question
+      do {
+        question = buildQuestion(generateExpression(variant), variant)
+      } while (usedPrompts.has(question.prompt))
+      usedPrompts.add(question.prompt)
+      return question
+    }),
+  )
+  return fakeRequest(questions.map((question, index) => ({ id: index + 1, ...question })))
+}
+
+export function getTimesTableQuestions() {
+  return getExpressionQuestions(TIMES_TABLE_VARIANTS, buildTimesTableQuestion)
+}
+
+export function getEquationQuestions() {
+  return getExpressionQuestions(EQUATION_VARIANTS, buildEquationQuestion)
 }

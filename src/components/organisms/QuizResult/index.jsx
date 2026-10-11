@@ -13,7 +13,7 @@ function BonusMessage({ bonusOffer, bonusResult }) {
   if (bonusOffer) {
     return (
       <Text variant="muted">
-        Quer ganhar mais tempo? Responda {formatBonusCount(bonusOffer.questionCount)}: cada acerto vale{' '}
+        Quer ganhar mais tempo? Responda {formatBonusCount(bonusOffer.questionCount)} e ganhe até{' '}
         {`+${bonusOffer.reward}`}. Só dá para tentar uma vez!
       </Text>
     )

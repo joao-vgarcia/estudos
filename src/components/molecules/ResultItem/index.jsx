@@ -18,14 +18,15 @@ function AnswerDetails({ givenAnswer, correctAnswer, isCorrect }) {
   )
 }
 
-function PromptMedia({ image, word, imageGrid }) {
-  if (!image && !word && !imageGrid) return null
+function PromptMedia({ image, word, imageGrid, passage }) {
+  if (!image && !word && !imageGrid && !passage) return null
 
   return (
     <div className="my-2 flex flex-wrap items-center gap-4">
       {image && <Emoji symbol={image} size="sm" />}
       {word && <Text>“{word}”</Text>}
       {imageGrid && <EmojiGrid {...imageGrid} size="xs" />}
+      {passage && <Text variant="muted">{passage}</Text>}
     </div>
   )
 }
@@ -37,6 +38,7 @@ export default function ResultItem({
   image,
   word,
   imageGrid,
+  passage,
   givenAnswer,
   correctAnswer,
   parts,
@@ -55,7 +57,7 @@ export default function ResultItem({
       </span>
       <div className="flex flex-col gap-1">
         <Text>{prompt}</Text>
-        <PromptMedia image={image} word={word} imageGrid={imageGrid} />
+        <PromptMedia image={image} word={word} imageGrid={imageGrid} passage={passage} />
         {parts ? (
           parts.map((part) => (
             <div key={part.label} className="mt-3 flex flex-col gap-1">

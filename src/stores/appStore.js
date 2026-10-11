@@ -15,6 +15,7 @@ import {
   stopLeisure,
 } from '@/services/sessionService'
 import { getRemainingLeisureMs, isLeisureRunning } from '@/utils/leisure'
+import { canPlayLevel, getBonusReward } from '@/utils/levels'
 import { canAdvance, getAttemptsToRetry, getLevelAttempts, isCorrectAnswer } from '@/utils/quizGrading'
 import { buildAwayNotice, buildQuestionView, buildResult, buildSessionView } from './quizViewModels'
 
@@ -57,13 +58,13 @@ export const useAppStore = create((set, get) => {
 
   const startLevel = (levelIndex, attempts) =>
     startRound({ levelIndex, attempts, round: ROUNDS.LEVEL }, () =>
-      fetchQuestions(LEVELS[levelIndex].questions, LEVELS[levelIndex].difficulty, attempts),
+      fetchQuestions(LEVELS[levelIndex].questions, attempts),
     )
 
   const beginLevel = (levelIndex, attempts) => {
     const session = startSession()
     update(withSession(session))
-    if (session.repetitions[levelIndex] === 0) return
+    if (!canPlayLevel(session, levelIndex)) return
     return startLevel(levelIndex, attempts)
   }
 
@@ -76,8 +77,7 @@ export const useAppStore = create((set, get) => {
     }))
     update({ step: STEPS.RESULT, attempts: [...attempts, ...roundAttempts] })
     if (round === ROUNDS.BONUS) {
-      const correctCount = roundAttempts.filter(({ isCorrect }) => isCorrect).length
-      update(withSession(addEarnedMinutes(correctCount * LEVELS[levelIndex].bonus.minutesPerQuestion)))
+      update(withSession(addEarnedMinutes(getBonusReward(roundAttempts))))
     } else if (get().result.hasPassed) {
       update(withSession(completeLevel(levelIndex, LEVELS[levelIndex].reward)))
     }
@@ -164,7 +164,7 @@ export const useAppStore = create((set, get) => {
       const { levelIndex, attempts, result } = get()
       if (!result?.bonusOffer) return
       return startRound({ levelIndex, attempts, round: ROUNDS.BONUS }, () =>
-        fetchQuestions(LEVELS[levelIndex].bonus.questions, LEVELS[levelIndex].difficulty, attempts),
+        fetchQuestions(LEVELS[levelIndex].bonus, attempts),
       )
     },
 

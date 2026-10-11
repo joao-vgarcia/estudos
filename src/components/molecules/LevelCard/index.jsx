@@ -2,29 +2,55 @@ import Button from '@/components/atoms/Button'
 import Emoji from '@/components/atoms/Emoji'
 import { formatCount } from '@/utils/text'
 
-export default function LevelCard({ title, stars, reward, bonusReward, repetitions, remainingRepetitions, onClick }) {
+function Repetitions({ repetitions, remainingRepetitions }) {
   return (
-    <Button variant="secondary" disabled={remainingRepetitions === 0} onClick={onClick}>
+    <>
+      <span className="flex gap-2" aria-hidden="true">
+        {Array.from({ length: repetitions }, (_, index) => (
+          <span key={index} className={index < remainingRepetitions ? '' : 'opacity-40 grayscale'}>
+            <Emoji symbol="📘" size="xs" />
+          </span>
+        ))}
+      </span>
+      <span className="sr-only">
+        {formatCount(remainingRepetitions, 'jogada restante', 'jogadas restantes')} de {repetitions}
+      </span>
+    </>
+  )
+}
+
+export default function LevelCard({
+  title,
+  stars,
+  reward,
+  bonusReward,
+  repetitions,
+  remainingRepetitions,
+  requiredLevelTitle,
+  onClick,
+}) {
+  const isLocked = Boolean(requiredLevelTitle)
+
+  return (
+    <Button variant="secondary" disabled={isLocked || remainingRepetitions === 0} onClick={onClick}>
       <span className="flex flex-col items-center gap-3 py-2">
         <span className="font-display text-4xl tracking-wide sm:text-5xl">Nível {title}</span>
-        <span className="flex gap-1" aria-hidden="true">
+        <span className="flex flex-wrap justify-center gap-1" aria-hidden="true">
           {Array.from({ length: stars }, (_, index) => (
             <Emoji key={index} symbol="⭐" size="xs" />
           ))}
         </span>
         <span className="sr-only">{formatCount(stars, 'estrela', 'estrelas')}</span>
         <span>{reward} min</span>
-        <span className="text-2xl font-medium text-white/85">+ até {bonusReward} min de bônus</span>
-        <span className="flex gap-2" aria-hidden="true">
-          {Array.from({ length: repetitions }, (_, index) => (
-            <span key={index} className={index < remainingRepetitions ? '' : 'opacity-40 grayscale'}>
-              <Emoji symbol="📘" size="xs" />
-            </span>
-          ))}
-        </span>
-        <span className="sr-only">
-          {formatCount(remainingRepetitions, 'jogada restante', 'jogadas restantes')} de {repetitions}
-        </span>
+        {bonusReward > 0 && <span className="text-2xl font-medium text-white/85">+ até {bonusReward} min de bônus</span>}
+        {isLocked ? (
+          <span className="flex flex-col items-center gap-2 text-2xl font-medium">
+            <Emoji symbol="🔒" size="xs" />
+            Passe do nível {requiredLevelTitle} para desbloquear
+          </span>
+        ) : (
+          <Repetitions repetitions={repetitions} remainingRepetitions={remainingRepetitions} />
+        )}
       </span>
     </Button>
   )

@@ -36,7 +36,7 @@ export default function StartPanel({ title, leisure, levels, onStart, onStartLei
           </div>
           <ul className="grid w-full gap-5 sm:grid-cols-2">
             {levels.map((level) => (
-              <li key={level.index} className="grid sm:last:col-span-2">
+              <li key={level.index} className="grid sm:odd:last:col-span-2">
                 <LevelCard {...level} onClick={() => onStart(level.index)} />
               </li>
             ))}

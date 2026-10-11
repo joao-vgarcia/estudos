@@ -8,14 +8,31 @@ import {
   getEnglishTrueFalseQuestions,
   getEnglishVocabularyQuestions,
 } from './englishService'
-import { getMathQuestions, getMathTrueFalseQuestions, getVisualCountingQuestions } from './mathService'
 import {
+  getEquationQuestions,
+  getMathQuestions,
+  getMathTrueFalseQuestions,
+  getTimesTableQuestions,
+  getVisualCountingQuestions,
+} from './mathService'
+import {
+  getAlphabeticalOrderQuestions,
+  getAntonymQuestions,
+  getDiminutiveQuestions,
+  getFeminineQuestions,
+  getFillInTheBlankQuestions,
   getPictureSpellingQuestions,
   getPluralQuestions,
   getPortugueseDictationQuestions,
   getPortugueseTrueFalseQuestions,
+  getPunctuationQuestions,
+  getReadingQuestions,
   getSpellingQuestions,
+  getSyllableCountQuestions,
+  getSyllableSplitQuestions,
   getSynonymQuestions,
+  getWrittenPictureNameQuestions,
+  getWrittenPluralQuestions,
 } from './portugueseService'
 import {
   getSpanishDictationQuestions,
@@ -32,6 +49,8 @@ const SUBJECT_MODULES = {
     fetchers: {
       [QUESTION_KINDS.OPERATIONS]: getMathQuestions,
       [QUESTION_KINDS.COUNTING]: getVisualCountingQuestions,
+      [QUESTION_KINDS.TIMES_TABLE]: getTimesTableQuestions,
+      [QUESTION_KINDS.EQUATION]: getEquationQuestions,
       [QUESTION_KINDS.TRUE_FALSE]: getMathTrueFalseQuestions,
     },
   },
@@ -42,7 +61,18 @@ const SUBJECT_MODULES = {
       [QUESTION_KINDS.SPELLING]: getSpellingQuestions,
       [QUESTION_KINDS.PICTURE_NAME]: getPictureSpellingQuestions,
       [QUESTION_KINDS.SYNONYM]: getSynonymQuestions,
+      [QUESTION_KINDS.ANTONYM]: getAntonymQuestions,
+      [QUESTION_KINDS.SYLLABLE_COUNT]: getSyllableCountQuestions,
       [QUESTION_KINDS.TRUE_FALSE]: getPortugueseTrueFalseQuestions,
+      [QUESTION_KINDS.SYLLABLE_SPLIT]: getSyllableSplitQuestions,
+      [QUESTION_KINDS.FEMININE]: getFeminineQuestions,
+      [QUESTION_KINDS.DIMINUTIVE]: getDiminutiveQuestions,
+      [QUESTION_KINDS.ALPHABETICAL_ORDER]: getAlphabeticalOrderQuestions,
+      [QUESTION_KINDS.FILL_IN_THE_BLANK]: getFillInTheBlankQuestions,
+      [QUESTION_KINDS.PUNCTUATION]: getPunctuationQuestions,
+      [QUESTION_KINDS.READING]: getReadingQuestions,
+      [QUESTION_KINDS.WRITTEN_PLURAL]: getWrittenPluralQuestions,
+      [QUESTION_KINDS.WRITTEN_PICTURE_NAME]: getWrittenPictureNameQuestions,
       [QUESTION_KINDS.DICTATION]: getPortugueseDictationQuestions,
     },
   },
@@ -94,8 +124,8 @@ async function fetchPreparedQuestions(source) {
   return questions.map((question) => prepareQuestion(question, source))
 }
 
-function getQuestionKey({ subjectId, prompt, word, image, correctAnswer }) {
-  return [subjectId, prompt, word, image, correctAnswer].join('|')
+function getQuestionKey({ subjectId, prompt, word, image, passage, correctAnswer }) {
+  return [subjectId, prompt, word, image, passage, correctAnswer].join('|')
 }
 
 function groupBy(list, getKey) {
@@ -118,17 +148,17 @@ function pickVaried(questions, count) {
   return shuffle(picked)
 }
 
-async function fetchSubjectPool({ subjectId, maxResult }) {
-  const kinds = Object.keys(SUBJECT_MODULES[subjectId].fetchers)
+async function fetchSubjectPool({ subjectId, kind, maxResult }) {
+  const kinds = kind ? [kind] : Object.keys(SUBJECT_MODULES[subjectId].fetchers)
   const questionLists = await Promise.all(kinds.map((kind) => fetchPreparedQuestions({ subjectId, kind, maxResult })))
   return questionLists.flat()
 }
 
-async function collectQuestions({ subjectId, difficulty, maxResult, count }, seenKeys) {
+async function collectQuestions({ subjectId, kind, difficulty, maxResult, count }, seenKeys) {
   const collected = []
 
   for (let fetchCount = 0; fetchCount < MAX_FETCHES && collected.length < count; fetchCount++) {
-    const pool = (await fetchSubjectPool({ subjectId, maxResult })).filter(
+    const pool = (await fetchSubjectPool({ subjectId, kind, maxResult })).filter(
       (question) => question.difficulty === difficulty,
     )
     if (pool.length === 0) break
@@ -143,10 +173,13 @@ async function collectQuestions({ subjectId, difficulty, maxResult, count }, see
   return collected
 }
 
-export async function fetchQuestions(blocks, difficulty, answeredQuestions) {
+export async function fetchQuestions(blocks, answeredQuestions) {
   const seenKeys = new Set(answeredQuestions.map(getQuestionKey))
   const questionLists = await Promise.all(
-    blocks.map((block) => collectQuestions({ difficulty, ...block }, seenKeys)),
+    blocks.map(async (block) => {
+      const questions = await collectQuestions(block, seenKeys)
+      return questions.map((question) => ({ ...question, minutesPerQuestion: block.minutesPerQuestion }))
+    }),
   )
   return questionLists.flat()
 }

@@ -12,7 +12,7 @@ export function getDictationQuestions({ entries, prompt, speechLocale, dictation
     randomItems(entries, QUESTIONS_PER_MODULE).map(({ word, hint }, index) => ({
       id: index + 1,
       type: QUESTION_TYPES.DICTATION,
-      difficulty: DIFFICULTIES.MEDIUM,
+      difficulty: DIFFICULTIES.HARD,
       prompt,
       hint,
       correctAnswer: word,

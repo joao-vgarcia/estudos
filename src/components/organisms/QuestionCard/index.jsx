@@ -7,6 +7,9 @@ import MultiNumberAnswer from '@/components/molecules/MultiNumberAnswer'
 import MultipleChoiceAnswer from '@/components/molecules/MultipleChoiceAnswer'
 import NumberAnswer from '@/components/molecules/NumberAnswer'
 import QuestionMedia from '@/components/molecules/QuestionMedia'
+import QuestionRewardBadge from '@/components/molecules/QuestionRewardBadge'
+import SolutionHint from '@/components/molecules/SolutionHint'
+import TextAnswer from '@/components/molecules/TextAnswer'
 import TrueFalseAnswer from '@/components/molecules/TrueFalseAnswer'
 import { QUESTION_TYPES } from '@/constants/quiz'
 
@@ -16,6 +19,7 @@ const answerFieldByType = {
   [QUESTION_TYPES.DICTATION]: DictationAnswer,
   [QUESTION_TYPES.IMAGE_CHOICE]: ImageChoiceAnswer,
   [QUESTION_TYPES.TRUE_FALSE]: TrueFalseAnswer,
+  [QUESTION_TYPES.TEXT]: TextAnswer,
 }
 
 export default function QuestionCard({
@@ -23,9 +27,11 @@ export default function QuestionCard({
   type,
   prompt,
   hint,
+  solutionHint,
   image,
   word,
   imageGrid,
+  passage,
   options,
   answer,
   parts,
@@ -33,6 +39,7 @@ export default function QuestionCard({
   canListen,
   levelTitle,
   roundLabel,
+  bonusReward,
   position,
   total,
   canAdvance,
@@ -50,15 +57,19 @@ export default function QuestionCard({
 
   return (
     <form className="flex flex-col gap-8" onSubmit={handleSubmit}>
-      <Text variant="muted">
-        Nível {levelTitle}
-        {roundLabel && ` · ${roundLabel}`} · Questão {position} de {total}
-      </Text>
+      <div className="flex flex-wrap items-center justify-between gap-4">
+        <Text variant="muted">
+          Nível {levelTitle}
+          {roundLabel && ` · ${roundLabel}`} · Questão {position} de {total}
+        </Text>
+        {bonusReward && <QuestionRewardBadge reward={bonusReward} />}
+      </div>
       <div className="flex flex-col gap-2">
         <Text as="h3" variant="subtitle">{prompt}</Text>
         {hint && <Text variant="muted">{hint}</Text>}
       </div>
-      <QuestionMedia key={`media-${id}`} image={image} word={word} imageGrid={imageGrid} />
+      <QuestionMedia key={`media-${id}`} image={image} word={word} imageGrid={imageGrid} passage={passage} />
+      {solutionHint && <SolutionHint key={`hint-${id}`} {...solutionHint} />}
       {canListen && <ListenButton onListen={onListen} />}
       <AnswerField
         key={id}

@@ -2,8 +2,8 @@ import Emoji from '@/components/atoms/Emoji'
 import Text from '@/components/atoms/Text'
 import EmojiGrid from '@/components/molecules/EmojiGrid'
 
-export default function QuestionMedia({ image, word, imageGrid }) {
-  if (!image && !word && !imageGrid) return null
+export default function QuestionMedia({ image, word, imageGrid, passage }) {
+  if (!image && !word && !imageGrid && !passage) return null
 
   return (
     <div className="flex justify-center">
@@ -11,6 +11,7 @@ export default function QuestionMedia({ image, word, imageGrid }) {
         {image && <Emoji symbol={image} size="lg" />}
         {word && <Text as="span" variant="highlight">{word}</Text>}
         {imageGrid && <EmojiGrid {...imageGrid} />}
+        {passage && <Text>{passage}</Text>}
       </div>
     </div>
   )

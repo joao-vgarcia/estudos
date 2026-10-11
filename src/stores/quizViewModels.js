@@ -2,6 +2,7 @@ import { QUIZ_AWAY_LIMIT_MESSAGE, QUIZ_AWAY_LIMIT_MS } from '@/constants/leisure
 import { LEVELS } from '@/constants/levels'
 import { QUESTION_TYPES, ROUNDS, STEPS } from '@/constants/quiz'
 import { getEarnedLeisureMs, getRemainingLeisureMs, isLeisureRunning } from '@/utils/leisure'
+import { canPlayLevel, getBonusReward, getMaxBonusReward, isLevelUnlocked } from '@/utils/levels'
 import {
   canAdvance,
   getAttemptsToRetry,
@@ -45,6 +46,7 @@ function gradeAttempt(attempt) {
     image: attempt.image,
     word: attempt.word ?? attempt.speechText,
     imageGrid: attempt.imageGrid,
+    passage: attempt.passage,
     givenAnswer: attempt.answer,
     correctAnswer: attempt.correctAnswer,
     parts: attempt.parts && gradeParts(attempt.answer, attempt),
@@ -77,9 +79,10 @@ export function buildSessionView(session) {
       title: level.title,
       stars: index + 1,
       reward: level.reward,
-      bonusReward: countQuestions(level.bonus.questions) * level.bonus.minutesPerQuestion,
+      bonusReward: getMaxBonusReward(level),
       repetitions: level.repetitions,
       remainingRepetitions: Math.min(repetitions[index], level.repetitions),
+      requiredLevelTitle: isLevelUnlocked(session, index) ? undefined : LEVELS[index - 1].title,
     })),
     leisure: buildLeisureView(session),
   }
@@ -110,12 +113,15 @@ export function buildQuestionView({ step, questions, answers, currentIndex, leve
     difficulty: question.difficulty,
     levelTitle: LEVELS[levelIndex].title,
     roundLabel: ROUND_LABELS[round],
+    bonusReward: round === ROUNDS.BONUS ? formatMinutes(question.minutesPerQuestion) : undefined,
     type: question.type,
     prompt: question.prompt,
     hint: question.hint,
+    solutionHint: question.solutionHint,
     image: question.image,
     word: question.word,
     imageGrid: question.imageGrid,
+    passage: question.passage,
     options: question.options,
     answer: answer ?? '',
     parts: question.parts?.map(({ label }, index) => ({ label, answer: answer[index] ?? '' })),
@@ -139,9 +145,10 @@ export function buildResult({ step, attempts, levelIndex, session }) {
   const subjectIds = [...new Set(gradedQuestions.map(({ subjectId }) => subjectId))]
   const sections = subjectIds.map((subjectId) => buildSection(subjectId, gradedQuestions))
   const hasPassed = sections.every((section) => section.hasPassed)
-  const bonusItems = getBonusAttempts(attempts, levelIndex).map(gradeAttempt)
+  const bonusAttempts = getBonusAttempts(attempts, levelIndex)
+  const bonusItems = bonusAttempts.map(gradeAttempt)
   const bonusScore = summarizeScore(bonusItems)
-  const bonusMinutes = bonusScore.correctCount * level.bonus.minutesPerQuestion
+  const bonusMinutes = getBonusReward(bonusAttempts)
   const hasPlayedBonus = bonusItems.length > 0
 
   return {
@@ -152,16 +159,16 @@ export function buildResult({ step, attempts, levelIndex, session }) {
     reward: formatMinutes(level.reward + bonusMinutes),
     celebration: level.celebration,
     bonusOffer:
-      hasPassed && !hasPlayedBonus
+      hasPassed && level.bonus && !hasPlayedBonus
         ? {
-            questionCount: countQuestions(level.bonus.questions),
-            reward: formatMinutes(level.bonus.minutesPerQuestion),
+            questionCount: countQuestions(level.bonus),
+            reward: formatMinutes(getMaxBonusReward(level)),
           }
         : undefined,
     bonusResult: hasPlayedBonus
       ? { ...bonusScore, reward: bonusMinutes > 0 ? formatMinutes(bonusMinutes) : undefined, items: bonusItems }
       : undefined,
-    nextLevelTitle: hasPassed && session.repetitions[levelIndex + 1] > 0 ? LEVELS[levelIndex + 1].title : undefined,
+    nextLevelTitle: hasPassed && canPlayLevel(session, levelIndex + 1) ? LEVELS[levelIndex + 1].title : undefined,
     retryCount: hasPassed ? 0 : getAttemptsToRetry(levelAttempts).length,
   }
 }
