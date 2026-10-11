@@ -29,32 +29,28 @@ function BonusMessage({ bonusOffer, bonusResult }) {
   return null
 }
 
-function PassedActions({ nextLevelTitle, bonusOffer, bonusResult, onContinue, onBonus, onRestart, onExit }) {
+function PassedActions({ nextLevelTitle, bonusOffer, bonusResult, onContinue, onBonus, onMenu }) {
   return (
     <div className="flex flex-col gap-5">
       <BonusMessage bonusOffer={bonusOffer} bonusResult={bonusResult} />
       {nextLevelTitle && (
         <Text variant="muted">Quer continuar o desafio? O próximo é o nível {nextLevelTitle}.</Text>
       )}
-      <div className="flex flex-col-reverse gap-5 sm:flex-row sm:flex-wrap sm:justify-end">
-        <Button variant="negative" endIcon="log-out" onClick={onExit}>
-          Sair
+      <div className="grid auto-cols-fr grid-flow-col gap-5">
+        <Button variant="negative" endIcon="house" onClick={onMenu}>
+          Voltar ao menu
         </Button>
-        {bonusOffer && (
-          <Button variant="secondary" endIcon="gift" onClick={onBonus}>
-            {bonusOffer.questionCount === 1 ? 'Pergunta bônus' : 'Perguntas bônus'}
-          </Button>
-        )}
-        {nextLevelTitle ? (
+        {nextLevelTitle && (
           <Button variant="primary" endIcon="arrow-right" onClick={onContinue}>
             Continuar desafio
           </Button>
-        ) : (
-          <Button variant="primary" endIcon="rotate-ccw" onClick={onRestart}>
-            Recomeçar
-          </Button>
         )}
       </div>
+      {bonusOffer && (
+        <Button variant="secondary" endIcon="gift" onClick={onBonus}>
+          {bonusOffer.questionCount === 1 ? 'Pergunta bônus' : 'Perguntas bônus'}
+        </Button>
+      )}
     </div>
   )
 }
@@ -110,8 +106,7 @@ export default function QuizResult({
   onContinue,
   onRetry,
   onBonus,
-  onRestart,
-  onExit,
+  onMenu,
 }) {
   return (
     <div className="flex flex-col gap-8">
@@ -124,8 +119,7 @@ export default function QuizResult({
             bonusResult={bonusResult}
             onContinue={onContinue}
             onBonus={onBonus}
-            onRestart={onRestart}
-            onExit={onExit}
+            onMenu={onMenu}
           />
         </>
       ) : (

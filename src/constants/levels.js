@@ -9,6 +9,7 @@ export const LEVELS = [
     title: '1',
     difficulty: DIFFICULTIES.EASY,
     reward: 10,
+    repetitions: 4,
     questions: [
       { ...BASIC_MATH, count: 5 },
       { subjectId: SUBJECTS.PORTUGUESE, count: 5 },
@@ -32,6 +33,7 @@ export const LEVELS = [
     title: '2',
     difficulty: DIFFICULTIES.EASY,
     reward: 20,
+    repetitions: 4,
     questions: [
       { ...BASIC_MATH, count: 10 },
       { subjectId: SUBJECTS.PORTUGUESE, count: 5 },
@@ -55,6 +57,7 @@ export const LEVELS = [
     title: '3',
     difficulty: DIFFICULTIES.MEDIUM,
     reward: 30,
+    repetitions: 4,
     questions: [
       { ...ADVANCED_MATH, count: 5 },
       { subjectId: SUBJECTS.PORTUGUESE, count: 10 },
@@ -82,6 +85,7 @@ export const LEVELS = [
     title: '4',
     difficulty: DIFFICULTIES.MEDIUM,
     reward: 45,
+    repetitions: 3,
     questions: [
       { ...ADVANCED_MATH, count: 10 },
       { subjectId: SUBJECTS.PORTUGUESE, count: 10 },
@@ -110,6 +114,7 @@ export const LEVELS = [
     title: '5',
     difficulty: DIFFICULTIES.HARD,
     reward: 60,
+    repetitions: 2,
     questions: [
       { ...ADVANCED_MATH, count: 10 },
       { subjectId: SUBJECTS.PORTUGUESE, difficulty: DIFFICULTIES.MEDIUM, count: 15 },

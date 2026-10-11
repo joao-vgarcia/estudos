@@ -1,5 +1,7 @@
+import { QUIZ_AWAY_LIMIT_MESSAGE, QUIZ_AWAY_LIMIT_MS } from '@/constants/leisure'
 import { LEVELS } from '@/constants/levels'
 import { QUESTION_TYPES, ROUNDS, STEPS } from '@/constants/quiz'
+import { getEarnedLeisureMs, getRemainingLeisureMs, isLeisureRunning } from '@/utils/leisure'
 import {
   canAdvance,
   getAttemptsToRetry,
@@ -8,7 +10,7 @@ import {
   gradeParts,
   hasReachedPassingRate,
 } from '@/utils/quizGrading'
-import { formatMinutes } from '@/utils/text'
+import { formatClock, formatDuration, formatMinutes } from '@/utils/text'
 
 const ROUND_LABELS = {
   [ROUNDS.RETRY]: 'Revisão',
@@ -55,6 +57,44 @@ function countQuestions(blocks) {
   return blocks.reduce((total, { count }) => total + count, 0)
 }
 
+function buildLeisureView(session) {
+  const remainingMs = getRemainingLeisureMs(session)
+  const earnedMs = getEarnedLeisureMs(session)
+  return {
+    time: formatDuration(remainingMs),
+    clock: formatClock(remainingMs),
+    progress: earnedMs > 0 ? remainingMs / earnedMs : 0,
+    isRunning: isLeisureRunning(session),
+    isAvailable: remainingMs > 0,
+  }
+}
+
+export function buildSessionView(session) {
+  const { repetitions } = session
+  return {
+    levelOptions: LEVELS.map((level, index) => ({
+      index,
+      title: level.title,
+      stars: index + 1,
+      reward: level.reward,
+      bonusReward: countQuestions(level.bonus.questions) * level.bonus.minutesPerQuestion,
+      repetitions: level.repetitions,
+      remainingRepetitions: Math.min(repetitions[index], level.repetitions),
+    })),
+    leisure: buildLeisureView(session),
+  }
+}
+
+export function buildAwayNotice({ awayMs, lostMs, isRestarted }) {
+  return [
+    `Você ficou fora por ${formatDuration(awayMs)}.`,
+    lostMs > 0 && `Você perdeu ${formatDuration(lostMs)} do tempo de lazer.`,
+    isRestarted
+      ? `Como passou de ${formatDuration(QUIZ_AWAY_LIMIT_MS)}, o questionário recomeçou do início.`
+      : QUIZ_AWAY_LIMIT_MESSAGE,
+  ].filter(Boolean)
+}
+
 export function buildQuestionView({ step, questions, answers, currentIndex, levelIndex, round }) {
   const question = questions[currentIndex]
   if (step !== STEPS.QUESTIONS || !question) return null
@@ -90,7 +130,7 @@ export function buildQuestionView({ step, questions, answers, currentIndex, leve
   }
 }
 
-export function buildResult({ step, attempts, levelIndex }) {
+export function buildResult({ step, attempts, levelIndex, session }) {
   if (step !== STEPS.RESULT) return null
 
   const level = LEVELS[levelIndex]
@@ -121,7 +161,7 @@ export function buildResult({ step, attempts, levelIndex }) {
     bonusResult: hasPlayedBonus
       ? { ...bonusScore, reward: bonusMinutes > 0 ? formatMinutes(bonusMinutes) : undefined, items: bonusItems }
       : undefined,
-    nextLevelTitle: hasPassed ? LEVELS[levelIndex + 1]?.title : undefined,
+    nextLevelTitle: hasPassed && session.repetitions[levelIndex + 1] > 0 ? LEVELS[levelIndex + 1].title : undefined,
     retryCount: hasPassed ? 0 : getAttemptsToRetry(levelAttempts).length,
   }
 }

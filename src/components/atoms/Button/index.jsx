@@ -17,12 +17,14 @@ export default function Button({
   variant = 'primary',
   disabled = false,
   type = 'button',
+  autoFocus = false,
 }) {
   return (
     <button
       type={type}
       onClick={onClick}
       disabled={disabled}
+      autoFocus={autoFocus}
       className={`inline-flex items-center justify-center gap-3 rounded-3xl px-8 py-4 text-3xl font-semibold transition enabled:active:translate-y-1.5 enabled:active:shadow-none focus-visible:outline-4 focus-visible:outline-offset-4 focus-visible:outline-white disabled:cursor-not-allowed disabled:border-transparent disabled:bg-white/15 disabled:text-white/60 disabled:shadow-none ${variants[variant]}`}
     >
       {startIcon && <Icon name={startIcon} size={ICON_SIZE} />}

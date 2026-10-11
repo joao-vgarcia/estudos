@@ -6,6 +6,7 @@
   --font-emoji: "Noto Color Emoji", "Apple Color Emoji", "Segoe UI Emoji", sans-serif;
 
   --animate-pop: pop 0.4s ease-out;
+  --animate-expand: expand 0.6s ease-out;
   --animate-confetti: confetti-fall 4s linear both;
   --animate-float: float 2.4s ease-in-out infinite;
   --animate-glow: glow 1.6s ease-out infinite;
@@ -42,6 +43,15 @@
     }
     100% {
       transform: scale(1);
+    }
+  }
+
+  @keyframes expand {
+    0% {
+      clip-path: inset(0 35% 85% 35% round 9999px);
+    }
+    100% {
+      clip-path: inset(0 round 2.5rem);
     }
   }
 

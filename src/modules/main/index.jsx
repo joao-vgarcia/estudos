@@ -1,9 +1,11 @@
 import Text from '@/components/atoms/Text'
+import AlertDialog from '@/components/molecules/AlertDialog'
 import QuestionCard from '@/components/organisms/QuestionCard'
 import QuizResult from '@/components/organisms/QuizResult'
 import StartPanel from '@/components/organisms/StartPanel'
 import Container from '@/components/templates/Container'
 import PageLayout from '@/components/templates/PageLayout'
+import { LEISURE_OVER_ALARM } from '@/constants/leisure'
 import { STEPS } from '@/constants/quiz'
 import { useMain } from './hook'
 
@@ -13,19 +15,36 @@ export default function MainModule() {
     isLoading,
     questionView,
     result,
+    levelOptions,
+    leisure,
+    isLeisureOver,
+    awayNotice,
     onStart,
+    onMenu,
+    onStartLeisure,
+    onPauseLeisure,
+    onDismissLeisureOver,
+    onDismissAwayNotice,
     onContinue,
     onRetry,
     onBonus,
     onAnswer,
     onListen,
     onNext,
-    onExit,
   } = useMain()
 
   return (
     <PageLayout>
-      {step === STEPS.START && <StartPanel title="Estudos" onStart={onStart} />}
+      {step === STEPS.START && (
+        <StartPanel
+          title="Estudos"
+          leisure={leisure}
+          levels={levelOptions}
+          onStart={onStart}
+          onStartLeisure={onStartLeisure}
+          onPauseLeisure={onPauseLeisure}
+        />
+      )}
 
       {step === STEPS.QUESTIONS && (
         <Container subjectId={questionView?.subjectId} difficulty={questionView?.difficulty}>
@@ -48,10 +67,29 @@ export default function MainModule() {
             onContinue={onContinue}
             onRetry={onRetry}
             onBonus={onBonus}
-            onRestart={onStart}
-            onExit={onExit}
+            onMenu={onMenu}
           />
         </Container>
+      )}
+
+      {isLeisureOver && (
+        <AlertDialog
+          emoji="⏰"
+          title={LEISURE_OVER_ALARM.title}
+          messages={[LEISURE_OVER_ALARM.body]}
+          actionLabel="Entendi"
+          onAction={onDismissLeisureOver}
+        />
+      )}
+
+      {awayNotice && (
+        <AlertDialog
+          emoji="👀"
+          title="Você saiu do questionário!"
+          messages={awayNotice}
+          actionLabel="Voltar ao questionário"
+          onAction={onDismissAwayNotice}
+        />
       )}
     </PageLayout>
   )

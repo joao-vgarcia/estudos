@@ -1,11 +1,12 @@
-import { ArrowRight, Check, ChevronDown, Gift, LogOut, Play, RotateCcw, Volume2, X } from 'lucide-react'
+import { ArrowRight, Check, ChevronDown, Gift, House, Pause, Play, RotateCcw, Volume2, X } from 'lucide-react'
 
 const icons = {
   'arrow-right': ArrowRight,
   check: Check,
   'chevron-down': ChevronDown,
   gift: Gift,
-  'log-out': LogOut,
+  house: House,
+  pause: Pause,
   play: Play,
   'rotate-ccw': RotateCcw,
   'volume-2': Volume2,
