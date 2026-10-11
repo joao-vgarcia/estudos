@@ -14,10 +14,11 @@ import {
   startSession,
   stopLeisure,
 } from '@/services/sessionService'
-import { getRemainingLeisureMs, isLeisureRunning } from '@/utils/leisure'
+import { getAwayLeisureMs, getRemainingLeisureMs, isLeisureRunning } from '@/utils/leisure'
 import { canPlayLevel, getBonusReward } from '@/utils/levels'
 import { canAdvance, getAttemptsToRetry, getLevelAttempts, isCorrectAnswer } from '@/utils/quizGrading'
-import { buildAwayNotice, buildQuestionView, buildResult, buildSessionView } from './quizViewModels'
+import { getElapsedMs } from '@/utils/timer'
+import { buildAwayNotice, buildQuestionTimer, buildQuestionView, buildResult, buildSessionView } from './quizViewModels'
 
 const initialState = {
   step: STEPS.START,
@@ -27,11 +28,16 @@ const initialState = {
   questions: [],
   answers: [],
   currentIndex: 0,
+  questionStartedAt: null,
   attempts: [],
 }
 
+function createBlankAnswer({ parts }) {
+  return parts?.map(() => null) ?? null
+}
+
 function createBlankAnswers(questions) {
-  return questions.map(({ parts }) => parts?.map(() => null) ?? null)
+  return questions.map(createBlankAnswer)
 }
 
 function getAwayPenaltyFactor(step) {
@@ -41,8 +47,15 @@ function getAwayPenaltyFactor(step) {
 export const useAppStore = create((set, get) => {
   const update = (partialState) => {
     const nextState = { ...get(), ...partialState }
-    set({ ...partialState, questionView: buildQuestionView(nextState), result: buildResult(nextState) })
+    set({
+      ...partialState,
+      questionView: buildQuestionView(nextState),
+      questionTimer: buildQuestionTimer(nextState),
+      result: buildResult(nextState),
+    })
   }
+
+  const showQuestion = (partialState) => update({ ...partialState, questionStartedAt: Date.now() })
 
   const withSession = (session) => ({ session, ...buildSessionView(session) })
 
@@ -53,7 +66,7 @@ export const useAppStore = create((set, get) => {
       const id = attempts.length + index
       return { ...question, id, slotId: question.slotId ?? id, levelIndex, isBonus: round === ROUNDS.BONUS }
     })
-    update({ questions, answers: createBlankAnswers(questions), isLoading: false })
+    showQuestion({ questions, answers: createBlankAnswers(questions), isLoading: false })
   }
 
   const startLevel = (levelIndex, attempts) =>
@@ -83,6 +96,21 @@ export const useAppStore = create((set, get) => {
     }
   }
 
+  const showNextQuestion = () => {
+    const { questions, currentIndex } = get()
+    if (currentIndex === questions.length - 1) {
+      finishRound()
+      return
+    }
+    showQuestion({ currentIndex: currentIndex + 1 })
+  }
+
+  const expireQuestion = () => {
+    const { questions, answers, currentIndex } = get()
+    update({ answers: answers.with(currentIndex, createBlankAnswer(questions[currentIndex])) })
+    showNextQuestion()
+  }
+
   const finishLeisure = () => {
     const session = isSessionExpired(get().session) ? loadSession() : stopLeisure()
     update({ ...withSession(session), isLeisureOver: true })
@@ -90,7 +118,7 @@ export const useAppStore = create((set, get) => {
 
   const warnQuizAway = (awayMs, lostMs) => {
     const isRestarted = awayMs > QUIZ_AWAY_LIMIT_MS
-    if (isRestarted) update({ answers: createBlankAnswers(get().questions), currentIndex: 0 })
+    if (isRestarted) showQuestion({ answers: createBlankAnswers(get().questions), currentIndex: 0 })
     update({ awayNotice: buildAwayNotice({ awayMs, lostMs, isRestarted }) })
   }
 
@@ -98,6 +126,7 @@ export const useAppStore = create((set, get) => {
     ...initialState,
     ...withSession(settleAway()),
     questionView: null,
+    questionTimer: null,
     result: null,
     isAway: false,
     isLeisureOver: false,
@@ -126,6 +155,12 @@ export const useAppStore = create((set, get) => {
       if (sessionView.leisure.clock !== leisure.clock) update(sessionView)
     },
 
+    tickAway: () => {
+      const { session, isLeisureOver } = get()
+      if (!session.away || isLeisureOver || getAwayLeisureMs(session) < getRemainingLeisureMs(session)) return
+      update({ isLeisureOver: true })
+    },
+
     dismissLeisureOver: () => update({ isLeisureOver: false }),
 
     leavePage: () => {
@@ -135,12 +170,12 @@ export const useAppStore = create((set, get) => {
       update(withSession(markAway(getAwayPenaltyFactor(step))))
     },
 
-    returnToPage: (awayMs) => {
+    returnToPage: (awaySince) => {
       const { step, session: previousSession } = get()
       const session = settleAway()
       const lostMs = Math.max(getRemainingLeisureMs(previousSession) - getRemainingLeisureMs(session), 0)
       update({ ...withSession(session), isAway: false })
-      if (step === STEPS.QUESTIONS) warnQuizAway(awayMs, lostMs)
+      if (step === STEPS.QUESTIONS) warnQuizAway(getElapsedMs(awaySince), lostMs)
     },
 
     dismissAwayNotice: () => update({ awayNotice: null }),
@@ -177,13 +212,19 @@ export const useAppStore = create((set, get) => {
     },
 
     goToNextQuestion: () => {
-      const { questions, answers, currentIndex } = get()
+      const { answers, currentIndex } = get()
       if (!canAdvance(answers[currentIndex])) return
-      if (currentIndex === questions.length - 1) {
-        finishRound()
+      showNextQuestion()
+    },
+
+    tickQuestionTimer: () => {
+      const questionTimer = buildQuestionTimer(get())
+      if (!questionTimer) return
+      if (questionTimer.isExpired) {
+        expireQuestion()
         return
       }
-      update({ currentIndex: currentIndex + 1 })
+      if (questionTimer.clock !== get().questionTimer?.clock) update({ questionTimer })
     },
   }
 })

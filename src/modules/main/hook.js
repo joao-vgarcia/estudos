@@ -1,7 +1,8 @@
 import { useCallback, useEffect } from 'react'
-import { LEISURE_OVER_ALARM, LEISURE_TICK_MS, QUIZ_AWAY_ALARM } from '@/constants/leisure'
+import { LEISURE_OVER_ALARM, NO_LEISURE_AWAY_ALARM, QUIZ_AWAY_ALARM } from '@/constants/leisure'
 import { STEPS } from '@/constants/quiz'
 import { SESSION_REFRESH_INTERVAL_MS } from '@/constants/session'
+import { TIMER_TICK_MS } from '@/constants/time'
 import { useAppStore } from '@/stores/appStore'
 import { requestNotificationPermission, startAlarm, unlockAudio } from '@/utils/alarm'
 import { watchAway } from '@/utils/focus'
@@ -9,15 +10,24 @@ import { enterFullscreen, exitFullscreen } from '@/utils/fullscreen'
 import { startInterval } from '@/utils/interval'
 import { speak, stopSpeaking } from '@/utils/speech'
 
+function useTimerTick(tick, isRunning) {
+  useEffect(() => {
+    if (!isRunning) return
+    return startInterval(tick, TIMER_TICK_MS)
+  }, [tick, isRunning])
+}
+
 export function useMain() {
   const step = useAppStore((state) => state.step)
   const isLoading = useAppStore((state) => state.isLoading)
   const questionView = useAppStore((state) => state.questionView)
+  const questionTimer = useAppStore((state) => state.questionTimer)
   const result = useAppStore((state) => state.result)
   const levelOptions = useAppStore((state) => state.levelOptions)
   const leisure = useAppStore((state) => state.leisure)
   const isAway = useAppStore((state) => state.isAway)
   const isLeisureOver = useAppStore((state) => state.isLeisureOver)
+  const isLeisureDraining = useAppStore((state) => Boolean(state.session.away) && !state.isLeisureOver)
   const awayNotice = useAppStore((state) => state.awayNotice)
   const startQuiz = useAppStore((state) => state.startQuiz)
   const goToStart = useAppStore((state) => state.goToStart)
@@ -25,6 +35,7 @@ export function useMain() {
   const startLeisure = useAppStore((state) => state.startLeisure)
   const pauseLeisure = useAppStore((state) => state.pauseLeisure)
   const tickLeisure = useAppStore((state) => state.tickLeisure)
+  const tickAway = useAppStore((state) => state.tickAway)
   const dismissLeisureOver = useAppStore((state) => state.dismissLeisureOver)
   const leavePage = useAppStore((state) => state.leavePage)
   const returnToPage = useAppStore((state) => state.returnToPage)
@@ -34,8 +45,17 @@ export function useMain() {
   const playBonus = useAppStore((state) => state.playBonus)
   const answerQuestion = useAppStore((state) => state.answerQuestion)
   const goToNextQuestion = useAppStore((state) => state.goToNextQuestion)
+  const tickQuestionTimer = useAppStore((state) => state.tickQuestionTimer)
 
   const isQuizAway = step === STEPS.QUESTIONS && isAway
+  const isAwayWithoutLeisure = step === STEPS.START && isAway && !leisure.isRunning && !leisure.isAvailable
+  const alarm =
+    (isQuizAway && QUIZ_AWAY_ALARM) ||
+    (isLeisureOver && LEISURE_OVER_ALARM) ||
+    (isAwayWithoutLeisure && NO_LEISURE_AWAY_ALARM) ||
+    null
+  const isQuestionTimerRunning = Boolean(questionTimer) && !isAway
+  const questionId = questionView?.id
 
   useEffect(() => {
     if (step !== STEPS.START) return
@@ -45,21 +65,20 @@ export function useMain() {
 
   useEffect(() => watchAway({ onLeave: leavePage, onReturn: returnToPage }), [leavePage, returnToPage])
 
-  useEffect(() => {
-    if (!leisure.isRunning) return
-    return startInterval(tickLeisure, LEISURE_TICK_MS)
-  }, [leisure.isRunning, tickLeisure])
+  useTimerTick(tickLeisure, leisure.isRunning)
+  useTimerTick(tickAway, isLeisureDraining)
+  useTimerTick(tickQuestionTimer, isQuestionTimerRunning)
 
   useEffect(() => {
-    if (!isLeisureOver) return
-    return startAlarm(LEISURE_OVER_ALARM)
-  }, [isLeisureOver])
-
-  useEffect(() => {
-    if (!isQuizAway) return
+    if (!alarm) return
     stopSpeaking()
-    return startAlarm(QUIZ_AWAY_ALARM)
-  }, [isQuizAway])
+    return startAlarm(alarm)
+  }, [alarm])
+
+  useEffect(() => {
+    if (questionId === undefined) return
+    return stopSpeaking
+  }, [questionId])
 
   const runInFullscreen = useCallback((action) => {
     unlockAudio()
@@ -98,6 +117,7 @@ export function useMain() {
     step,
     isLoading,
     questionView,
+    questionTimer,
     result,
     levelOptions,
     leisure,

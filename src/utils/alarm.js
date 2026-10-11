@@ -1,11 +1,16 @@
 import { startInterval } from '@/utils/interval'
+import { shout, stopSpeaking } from '@/utils/speech'
 
-const ALARM_INTERVAL_MS = 1500
-const BEEP_DURATION_S = 0.5
-const BEEP_FREQUENCIES = [880, 660]
-const BEEP_VOLUME = 0.2
-const BEEP_MIN_VOLUME = 0.001
-const VIBRATION_PATTERN = [300, 200, 300]
+const ALARM_INTERVAL_MS = 3000
+const TITLE_FLASH_INTERVAL_MS = 500
+const SIREN_DURATION_S = 2.5
+const SIREN_SWEEP_S = 0.2
+const SIREN_LOW_FREQUENCY = 1000
+const SIREN_HIGH_FREQUENCY = 3000
+const SIREN_FREQUENCY_OFFSETS = [0, 45]
+const SIREN_VOLUME = 0.5
+const SIREN_FADE_S = 0.02
+const VIBRATION_PATTERN = [500, 100, 500, 100, 500]
 const NOTIFICATION_TAG = 'estudos-alarm'
 
 let audioContext
@@ -17,21 +22,32 @@ function getAudioContext() {
   return audioContext
 }
 
-function beep() {
+function playSiren() {
   const context = getAudioContext()
-  if (context?.state !== 'running') return
+  if (context?.state !== 'running') return () => {}
   const startTime = context.currentTime
-  const oscillator = context.createOscillator()
+  const endTime = startTime + SIREN_DURATION_S
   const gain = context.createGain()
-  oscillator.type = 'square'
-  BEEP_FREQUENCIES.forEach((frequency, index) => {
-    oscillator.frequency.setValueAtTime(frequency, startTime + (index * BEEP_DURATION_S) / BEEP_FREQUENCIES.length)
+  gain.gain.setValueAtTime(SIREN_VOLUME, startTime)
+  gain.gain.setValueAtTime(SIREN_VOLUME, endTime - SIREN_FADE_S)
+  gain.gain.linearRampToValueAtTime(0, endTime)
+  gain.connect(context.destination)
+  SIREN_FREQUENCY_OFFSETS.forEach((offset) => {
+    const oscillator = context.createOscillator()
+    oscillator.type = 'square'
+    for (let sweepTime = startTime; sweepTime < endTime; sweepTime += SIREN_SWEEP_S) {
+      oscillator.frequency.setValueAtTime(SIREN_LOW_FREQUENCY + offset, sweepTime)
+      oscillator.frequency.linearRampToValueAtTime(SIREN_HIGH_FREQUENCY + offset, sweepTime + SIREN_SWEEP_S)
+    }
+    oscillator.connect(gain)
+    oscillator.start(startTime)
+    oscillator.stop(endTime)
   })
-  gain.gain.setValueAtTime(BEEP_VOLUME, startTime)
-  gain.gain.exponentialRampToValueAtTime(BEEP_MIN_VOLUME, startTime + BEEP_DURATION_S)
-  oscillator.connect(gain).connect(context.destination)
-  oscillator.start(startTime)
-  oscillator.stop(startTime + BEEP_DURATION_S)
+  return () => gain.disconnect()
+}
+
+function canShout({ shout: text }) {
+  return Boolean(globalThis.speechSynthesis && text)
 }
 
 function showNotification({ title, body }) {
@@ -60,20 +76,35 @@ export function startAlarm(message) {
   const originalTitle = document.title
   const notification = showNotification(message)
   let isTitleFlashing = false
+  let isShoutTurn = true
+  let stopSiren = () => {}
 
-  const ring = () => {
+  const flashTitle = () => {
     isTitleFlashing = !isTitleFlashing
     document.title = isTitleFlashing ? `⚠️ ${message.title}` : originalTitle
-    beep()
+  }
+
+  const ring = () => {
+    navigator.vibrate?.(VIBRATION_PATTERN)
+    isShoutTurn = canShout(message) && !isShoutTurn
+    if (isShoutTurn) {
+      shout(message.shout)
+      return
+    }
+    stopSiren = playSiren()
   }
 
   window.focus()
-  navigator.vibrate?.(VIBRATION_PATTERN)
+  flashTitle()
   ring()
+  const stopFlashing = startInterval(flashTitle, TITLE_FLASH_INTERVAL_MS)
   const stopRinging = startInterval(ring, ALARM_INTERVAL_MS)
 
   return () => {
     stopRinging()
+    stopFlashing()
+    stopSiren()
+    stopSpeaking()
     notification?.close()
     document.title = originalTitle
   }

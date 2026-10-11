@@ -1,5 +1,12 @@
 import { QUIZ_AWAY_LIMIT_MESSAGE, QUIZ_AWAY_LIMIT_MS } from '@/constants/leisure'
 import { LEVELS } from '@/constants/levels'
+import {
+  BONUS_TIME_LIMIT_FACTOR,
+  QUESTION_TIME_CRITICAL_RATE,
+  QUESTION_TIME_LIMITS_MS,
+  QUESTION_TIME_STAGES,
+  QUESTION_TIME_URGENT_RATE,
+} from '@/constants/questionTimer'
 import { QUESTION_TYPES, ROUNDS, STEPS } from '@/constants/quiz'
 import { getEarnedLeisureMs, getRemainingLeisureMs, isLeisureRunning } from '@/utils/leisure'
 import { canPlayLevel, getBonusReward, getMaxBonusReward, isLevelUnlocked } from '@/utils/levels'
@@ -12,6 +19,7 @@ import {
   hasReachedPassingRate,
 } from '@/utils/quizGrading'
 import { formatClock, formatDuration, formatMinutes } from '@/utils/text'
+import { getElapsedMs } from '@/utils/timer'
 
 const ROUND_LABELS = {
   [ROUNDS.RETRY]: 'Revisão',
@@ -133,6 +141,32 @@ export function buildQuestionView({ step, questions, answers, currentIndex, leve
     total: groupQuestions.length,
     canAdvance: canAdvance(answer),
     isLastQuestion: currentIndex === questions.length - 1,
+  }
+}
+
+function getQuestionTimeLimitMs({ difficulty, isBonus }) {
+  return QUESTION_TIME_LIMITS_MS[difficulty] * (isBonus ? BONUS_TIME_LIMIT_FACTOR : 1)
+}
+
+function getQuestionTimeStage(progress) {
+  if (progress <= QUESTION_TIME_CRITICAL_RATE) return QUESTION_TIME_STAGES.CRITICAL
+  if (progress <= QUESTION_TIME_URGENT_RATE) return QUESTION_TIME_STAGES.URGENT
+  return QUESTION_TIME_STAGES.NORMAL
+}
+
+export function buildQuestionTimer({ step, questions, currentIndex, questionStartedAt }, now = Date.now()) {
+  const question = questions[currentIndex]
+  if (step !== STEPS.QUESTIONS || !question) return null
+
+  const limitMs = getQuestionTimeLimitMs(question)
+  const remainingMs = Math.max(limitMs - getElapsedMs(questionStartedAt, now), 0)
+  const progress = remainingMs / limitMs
+
+  return {
+    clock: formatClock(remainingMs),
+    progress,
+    stage: getQuestionTimeStage(progress),
+    isExpired: remainingMs === 0,
   }
 }
 

@@ -1,7 +1,7 @@
 import { LEVELS } from '@/constants/levels'
 
 export function isLevelUnlocked({ unlockedLevels }, levelIndex) {
-  return !LEVELS[levelIndex].isLocked || unlockedLevels.includes(levelIndex)
+  return levelIndex === 0 || unlockedLevels.some((unlockedIndex) => unlockedIndex >= levelIndex)
 }
 
 export function canPlayLevel(session, levelIndex) {
@@ -10,7 +10,7 @@ export function canPlayLevel(session, levelIndex) {
 
 export function unlockNextLevel(unlockedLevels, levelIndex) {
   const nextIndex = levelIndex + 1
-  if (!LEVELS[nextIndex]?.isLocked || unlockedLevels.includes(nextIndex)) return unlockedLevels
+  if (nextIndex >= LEVELS.length || isLevelUnlocked({ unlockedLevels }, nextIndex)) return unlockedLevels
   return [...unlockedLevels, nextIndex]
 }
 

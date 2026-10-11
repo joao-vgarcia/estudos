@@ -9,9 +9,9 @@ export function watchAway({ onLeave, onReturn }) {
 
   const comeBack = () => {
     if (awaySince === null) return
-    const awayMs = Date.now() - awaySince
+    const since = awaySince
     awaySince = null
-    onReturn(awayMs)
+    onReturn(since)
   }
 
   const handleVisibilityChange = () => {

@@ -1,6 +1,6 @@
 import { LEVELS } from '@/constants/levels'
 import { SESSION_DURATION_MS, SESSION_STORAGE_KEY } from '@/constants/session'
-import { getEarnedLeisureMs, getRemainingLeisureMs, isLeisureRunning } from '@/utils/leisure'
+import { getAwayLeisureMs, getEarnedLeisureMs, getElapsedLeisureMs, getLeisureEndMs, isLeisureRunning } from '@/utils/leisure'
 import { unlockNextLevel } from '@/utils/levels'
 
 function createSession(unlockedLevels = []) {
@@ -85,7 +85,7 @@ export function startLeisure() {
     const now = Date.now()
     return {
       leisureStartedAt: new Date(now).toISOString(),
-      leisureEndsAt: new Date(now + getRemainingLeisureMs(session, now)).toISOString(),
+      leisureEndsAt: new Date(getLeisureEndMs(session, now)).toISOString(),
     }
   })
 }
@@ -93,7 +93,7 @@ export function startLeisure() {
 export function stopLeisure() {
   return changeSession(loadSession(), (session) => {
     if (!isLeisureRunning(session)) return {}
-    const elapsedMs = Date.now() - new Date(session.leisureStartedAt)
+    const elapsedMs = getElapsedLeisureMs(session)
     return {
       spentLeisureMs: Math.min(session.spentLeisureMs + elapsedMs, getEarnedLeisureMs(session)),
       leisureStartedAt: null,
@@ -111,12 +111,8 @@ export function markAway(penaltyFactor) {
 export function settleAway() {
   return changeSession(loadSession(), (session) => {
     if (!session.away) return {}
-    const awayMs = Date.now() - new Date(session.away.since)
     return {
-      spentLeisureMs: Math.min(
-        session.spentLeisureMs + awayMs * session.away.penaltyFactor,
-        getEarnedLeisureMs(session),
-      ),
+      spentLeisureMs: Math.min(session.spentLeisureMs + getAwayLeisureMs(session), getEarnedLeisureMs(session)),
       away: null,
     }
   })

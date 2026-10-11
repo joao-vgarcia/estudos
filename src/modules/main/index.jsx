@@ -1,5 +1,6 @@
 import Text from '@/components/atoms/Text'
 import AlertDialog from '@/components/molecules/AlertDialog'
+import QuestionTimer from '@/components/molecules/QuestionTimer'
 import QuestionCard from '@/components/organisms/QuestionCard'
 import QuizResult from '@/components/organisms/QuizResult'
 import StartPanel from '@/components/organisms/StartPanel'
@@ -14,6 +15,7 @@ export default function MainModule() {
     step,
     isLoading,
     questionView,
+    questionTimer,
     result,
     levelOptions,
     leisure,
@@ -47,16 +49,19 @@ export default function MainModule() {
       )}
 
       {step === STEPS.QUESTIONS && (
-        <Container subjectId={questionView?.subjectId} difficulty={questionView?.difficulty}>
-          {isLoading ? (
-            <Text variant="muted">Carregando...</Text>
-          ) : (
-            <>
-              <Text as="h2" variant="title">{questionView.subject}</Text>
-              <QuestionCard {...questionView} onAnswer={onAnswer} onListen={onListen} onNext={onNext} />
-            </>
-          )}
-        </Container>
+        <div className="flex flex-col gap-4">
+          {questionTimer && <QuestionTimer {...questionTimer} />}
+          <Container subjectId={questionView?.subjectId} difficulty={questionView?.difficulty}>
+            {isLoading ? (
+              <Text variant="muted">Carregando...</Text>
+            ) : (
+              <>
+                <Text as="h2" variant="title">{questionView.subject}</Text>
+                <QuestionCard {...questionView} onAnswer={onAnswer} onListen={onListen} onNext={onNext} />
+              </>
+            )}
+          </Container>
+        </div>
       )}
 
       {step === STEPS.RESULT && (

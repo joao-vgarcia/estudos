@@ -1,4 +1,5 @@
 import { LOCALE } from '@/constants/locale'
+import { MS_PER_MINUTE, MS_PER_SECOND, SECONDS_PER_HOUR, SECONDS_PER_MINUTE } from '@/constants/time'
 
 export function normalizeText(text) {
   return text?.trim().replace(/\s+/g, ' ').toLocaleLowerCase(LOCALE)
@@ -7,10 +8,6 @@ export function normalizeText(text) {
 export function formatCount(count, singular, plural) {
   return `${count} ${count === 1 ? singular : plural}`
 }
-
-const MS_PER_SECOND = 1000
-const SECONDS_PER_MINUTE = 60
-const SECONDS_PER_HOUR = 60 * SECONDS_PER_MINUTE
 
 const listFormat = new Intl.ListFormat(LOCALE, { type: 'conjunction' })
 
@@ -38,7 +35,7 @@ export function formatDuration(ms) {
 }
 
 export function formatMinutes(totalMinutes) {
-  return formatDuration(totalMinutes * SECONDS_PER_MINUTE * MS_PER_SECOND)
+  return formatDuration(totalMinutes * MS_PER_MINUTE)
 }
 
 export function formatClock(ms) {

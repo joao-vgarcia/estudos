@@ -31,7 +31,7 @@ export const LEVELS = [
     bonus: [{ ...EASY_TIMES_TABLE, count: 5, minutesPerQuestion: 1 }],
     celebration: {
       title: 'Parabéns!',
-      message: 'Você mandou muito bem no nível 1!',
+      message: 'Você mandou muito bem no nível 1! O nível 2 está liberado!',
       emojis: ['🎉'],
       gifs: [],
       confettiCount: 40,
@@ -48,7 +48,7 @@ export const LEVELS = [
     bonus: [{ ...EASY_TIMES_TABLE, count: 5, minutesPerQuestion: 1 }],
     celebration: {
       title: 'Muito bem!',
-      message: 'Você foi demais no nível 2!',
+      message: 'Você foi demais no nível 2! O nível 3 está liberado!',
       emojis: ['😄', '🎉'],
       gifs: [],
       confettiCount: 50,
@@ -68,7 +68,7 @@ export const LEVELS = [
     bonus: [{ ...EASY_TIMES_TABLE, count: 5, minutesPerQuestion: 1 }],
     celebration: {
       title: 'Uau, que incrível!',
-      message: 'Você arrasou no nível 3!',
+      message: 'Você arrasou no nível 3! O nível 4 está liberado!',
       emojis: ['🤩', '🎉', '🌟'],
       gifs: [],
       confettiCount: 60,
@@ -90,7 +90,7 @@ export const LEVELS = [
     { ...MEDIUM_MATH, count: 1, minutesPerQuestion: 2 }],
     celebration: {
       title: 'Que fera!',
-      message: 'Nível 4 completo!',
+      message: 'Nível 4 completo. O nível 5 está liberado!',
       emojis: [],
       gifs: ['🥳', '🎉'],
       confettiCount: 75,
@@ -127,7 +127,6 @@ export const LEVELS = [
   },
   {
     title: '6',
-    isLocked: true,
     reward: 20,
     repetitions: 3,
     questions: [
@@ -154,7 +153,6 @@ export const LEVELS = [
   },
   {
     title: '7',
-    isLocked: true,
     reward: 25,
     repetitions: 3,
     questions: [
@@ -182,7 +180,6 @@ export const LEVELS = [
   },
   {
     title: '8',
-    isLocked: true,
     reward: 30,
     repetitions: 3,
     questions: [
@@ -213,7 +210,6 @@ export const LEVELS = [
   },
   {
     title: '9',
-    isLocked: true,
     reward: 35,
     repetitions: 3,
     questions: [
@@ -246,7 +242,6 @@ export const LEVELS = [
   },
   {
     title: '10',
-    isLocked: true,
     reward: 45,
     repetitions: 3,
     questions: [

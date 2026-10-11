@@ -1,8 +1,7 @@
+import { MS_PER_SECOND } from '@/constants/time'
 import { formatDuration } from '@/utils/text'
 
-export const LEISURE_TICK_MS = 250
-
-export const QUIZ_AWAY_LIMIT_MS = 30 * 1000
+export const QUIZ_AWAY_LIMIT_MS = 30 * MS_PER_SECOND
 
 export const AWAY_PENALTY_FACTOR = 1
 
@@ -13,6 +12,11 @@ export const QUIZ_AWAY_LIMIT_MESSAGE = `Se ficar fora por mais de ${formatDurati
 export const LEISURE_OVER_ALARM = {
   title: 'O tempo de lazer acabou!',
   body: 'Hora de voltar para os estudos.',
+}
+
+export const NO_LEISURE_AWAY_ALARM = {
+  title: 'Volte para os estudos!',
+  body: 'Você está sem tempo de lazer agora.',
 }
 
 export const QUIZ_AWAY_ALARM = {
